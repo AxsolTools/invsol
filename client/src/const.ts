@@ -2,7 +2,7 @@ export { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 
 export const APP_TITLE = import.meta.env.VITE_APP_TITLE || "App";
 
-export const APP_LOGO = "/logo.png";
+export const APP_LOGO = "/logo.nullrotue.svg";
 
 export const COMMUNITY_URL = "https://x.com/nullrotue";
 export const GITHUB_URL = "https://github.com/Lightprotocol/light-protocol";

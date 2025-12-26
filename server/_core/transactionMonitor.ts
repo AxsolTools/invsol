@@ -1,30 +1,41 @@
 /**
- * Transaction Monitor - Stores routing transaction ID mappings
- * The routing service handles all monitoring and processing
- * We only need to store the mapping for status polling
+ * Transaction Monitor - Stores routing transaction ID mappings in database
+ * Replaces in-memory Map for multi-instance support and persistence
  */
 
-// Store mapping of our transaction IDs to routing service transaction IDs
-const transactionIdToRoutingId = new Map<string, string>();
+import * as db from "../db";
 
 /**
- * Initialize transaction monitor (routing service handles all monitoring)
+ * Initialize transaction monitor
  */
 export async function startTransactionMonitor() {
-  console.log(`[Monitor] Routing service handles all monitoring - no local monitoring needed`);
+  console.log(`[Monitor] Transaction monitor initialized - using database for routing mappings`);
 }
 
 /**
- * Store routing transaction ID mapping
+ * Store routing transaction ID mapping in database
  */
-export function storeRoutingTransactionId(transactionId: string, routingTransactionId: string) {
-  transactionIdToRoutingId.set(transactionId, routingTransactionId);
-  console.log(`[Monitor] Stored routing transaction mapping: ${transactionId} -> ${routingTransactionId}`);
+export async function storeRoutingTransactionId(transactionId: string, routingTransactionId: string) {
+  try {
+    await db.storeTransactionRouting({
+      txSignature: transactionId,
+      routingTransactionId: routingTransactionId,
+    });
+    console.log(`[Monitor] Stored routing transaction mapping: ${transactionId} -> ${routingTransactionId}`);
+  } catch (error) {
+    console.error(`[Monitor] Failed to store routing transaction mapping:`, error);
+    throw error;
+  }
 }
 
 /**
- * Get routing transaction ID for our internal transaction ID
+ * Get routing transaction ID for our internal transaction ID from database
  */
 export async function getRoutingTransactionId(transactionId: string): Promise<string | null> {
-  return transactionIdToRoutingId.get(transactionId) || null;
+  try {
+    return await db.getRoutingTransactionId(transactionId);
+  } catch (error) {
+    console.error(`[Monitor] Failed to get routing transaction ID:`, error);
+    return null;
+  }
 }

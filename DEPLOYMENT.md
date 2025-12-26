@@ -1,4 +1,4 @@
-# Luminos Deployment Guide
+image.pngimage.png# Luminos Deployment Guide
 
 This document provides comprehensive instructions for deploying Luminos, a Solana private transactions application powered by Light Protocol.
 
@@ -43,56 +43,49 @@ LIGHT_PROTOCOL_RELAYER_URL=<your-relayer-url>
 LIGHT_PROTOCOL_PROGRAM_ID=<program-id>
 ```
 
-## Vercel Deployment
+## DigitalOcean App Platform Deployment
 
-Luminos is optimized for Vercel deployment with serverless functions.
+Luminos is optimized for DigitalOcean App Platform deployment.
 
 ### Step 1: Prepare Your Repository
 
 1. Ensure all code is committed to your Git repository
 2. Push to GitHub, GitLab, or Bitbucket
 
-### Step 2: Import to Vercel
+### Step 2: Deploy to DigitalOcean
 
-1. Go to [Vercel Dashboard](https://vercel.com/dashboard)
-2. Click "Add New Project"
-3. Import your Git repository
-4. Vercel will auto-detect the framework settings
+#### Option A: Deploy via Dashboard (Recommended)
+
+1. Go to [DigitalOcean App Platform](https://cloud.digitalocean.com/apps)
+2. Click "Create App"
+3. Connect your GitHub repository
+4. Select the branch (main/master)
+5. DigitalOcean will auto-detect Node.js
+6. **Build Command:** `pnpm install && pnpm build`
+7. **Run Command:** `pnpm start`
+8. **HTTP Port:** `3000` (or leave blank, DO will set PORT env var)
+9. Add environment variables (see below)
+10. Review and deploy!
+
+#### Option B: Deploy via CLI
+
+1. Install DigitalOcean CLI: `choco install doctl` (Windows) or see [doctl installation guide](https://docs.digitalocean.com/reference/doctl/how-to/install/)
+2. Authenticate: `doctl auth init`
+3. Create app: `doctl apps create --spec .do/app.yaml` (if you have an app spec file)
 
 ### Step 3: Configure Environment Variables
 
-In Vercel Project Settings → Environment Variables, add:
+In DigitalOcean App Platform → Settings → Environment Variables, add:
 
 ```
 SOLANA_RPC_ENDPOINT=https://api.devnet.solana.com
 SOLANA_NETWORK=devnet
+CHANGENOW_API_KEY=your-changenow-api-key
+DATABASE_URL=your-database-connection-string
+NODE_ENV=production
 ```
 
-**Important:** All Manus system variables are automatically configured. Do NOT manually add them.
-
-### Step 4: Deploy
-
-1. Click "Deploy"
-2. Vercel will build and deploy your application
-3. Your application will be available at `https://your-project.vercel.app`
-
-### Deployment Configuration
-
-The project includes a `vercel.json` configuration (if needed):
-
-```json
-{
-  "buildCommand": "pnpm build",
-  "outputDirectory": "dist",
-  "framework": "vite",
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
-    }
-  ]
-}
-```
+See `DIGITALOCEAN_DEPLOY.md` for complete deployment instructions.
 
 ## Manus Platform Deployment
 
@@ -245,7 +238,7 @@ For issues related to:
 
 2. **Environment Variables**
    - Never commit `.env` files to version control
-   - Use Vercel/Manus secret management
+   - Use DigitalOcean App Platform secret management or environment variables
    - Rotate secrets regularly
 
 3. **Rate Limiting**
@@ -281,7 +274,7 @@ As your application grows:
 1. **Database**: Upgrade to a larger database instance
 2. **RPC**: Use dedicated Solana RPC nodes
 3. **Caching**: Implement Redis for session storage
-4. **CDN**: Use Vercel Edge Network for global distribution
+4. **CDN**: DigitalOcean App Platform includes CDN and global distribution
 
 ## License
 

@@ -1,7 +1,7 @@
 import { eq, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { wallets, transactions, InsertWallet, InsertTransaction } from "../drizzle/schema";
+import { wallets, transactions, transactionRouting, InsertWallet, InsertTransaction, InsertTransactionRouting } from "../drizzle/schema";
 import * as schema from "../drizzle/schema";
 
 let _db: ReturnType<typeof drizzle<typeof schema>> | null = null;
@@ -16,8 +16,9 @@ export async function getDb() {
     }
     
     try {
-      // Create postgres connection
-      _sql = postgres(process.env.DATABASE_URL, { max: 10 });
+      // Create postgres connection (increased pool size for concurrency)
+      const maxConnections = parseInt(process.env.DB_MAX_CONNECTIONS || "20");
+      _sql = postgres(process.env.DATABASE_URL, { max: maxConnections });
       
       // Create drizzle instance with postgres connection and schema
       _db = drizzle(_sql, { schema });
@@ -163,4 +164,49 @@ export async function updateTransactionStatus(
       updatedAt: new Date(),
     })
     .where(eq(transactions.txSignature, txSignature));
+}
+
+// Transaction routing operations
+export async function storeTransactionRouting(tx: InsertTransactionRouting) {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  try {
+    // Try to insert first
+    await db.insert(transactionRouting).values(tx);
+  } catch (error: any) {
+    // If duplicate, update instead (idempotency)
+    if (error?.code === "23505" || error?.message?.includes("unique") || error?.message?.includes("duplicate")) {
+      await db
+        .update(transactionRouting)
+        .set({
+          routingTransactionId: tx.routingTransactionId,
+          updatedAt: new Date(),
+        })
+        .where(eq(transactionRouting.txSignature, tx.txSignature));
+    } else {
+      console.error("[Database] Error in storeTransactionRouting:", error);
+      throw error;
+    }
+  }
+}
+
+export async function getTransactionRouting(txSignature: string) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db
+    .select()
+    .from(transactionRouting)
+    .where(eq(transactionRouting.txSignature, txSignature))
+    .limit(1);
+  
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function getRoutingTransactionId(txSignature: string): Promise<string | null> {
+  const routing = await getTransactionRouting(txSignature);
+  return routing?.routingTransactionId || null;
 }

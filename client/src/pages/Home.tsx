@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { trpc } from "@/lib/trpc";
 import { COMMUNITY_URL, APP_LOGO } from "@/const";
 
-// Map internal status to user-friendly status and progress
+// Map internal status to user-friendly status and progress (generic labels only)
 function getStatusDisplay(status?: string): { label: string; progress: number; color: string } {
   switch (status) {
     case "waiting":
@@ -90,7 +90,11 @@ export default function Home() {
     {
       enabled: !!transactionResult?.routingTransactionId,
       refetchInterval: (query) => {
-        const status = query.state.data?.status;
+        const data = query.state.data;
+        if (!data || typeof data !== 'object' || !('status' in data)) {
+          return 5000; // Continue polling if no data yet
+        }
+        const status = (data as { status?: string }).status;
         // Stop polling if transaction is finished, failed, refunded, or expired
         if (status === "finished" || status === "failed" || status === "refunded" || status === "expired") {
           return false;
@@ -109,14 +113,22 @@ export default function Home() {
       return;
     }
 
-    if (!transferAmount || parseFloat(transferAmount) <= 0) {
+    const amount = parseFloat(transferAmount);
+    if (!transferAmount || isNaN(amount) || amount <= 0 || !isFinite(amount)) {
+      toast.error("Please enter a valid amount");
+      return;
+    }
+
+    // Ensure amount is a valid string representation
+    const amountStr = amount.toString();
+    if (!amountStr || amountStr === "NaN" || amountStr === "Infinity") {
       toast.error("Please enter a valid amount");
       return;
     }
 
     transferMutation.mutate({
       recipientPublicKey: transferRecipient.trim(),
-      amountSol: transferAmount,
+      amountSol: amountStr,
     });
   };
 
@@ -614,15 +626,15 @@ export default function Home() {
                 </div>
 
                 {/* Fee Estimation Display */}
-                {transferAmount && parseFloat(transferAmount) > 0 && (
+                {transferAmount && parseFloat(transferAmount) > 0 && !isNaN(parseFloat(transferAmount)) && (
                   <div className="rounded-lg bg-[#1a1a1a] border border-[#333333] p-5 space-y-3">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-400">Transaction Fee:</span>
                       {isEstimatingFees ? (
                         <span className="shimmer inline-block w-20 h-4 rounded"></span>
-                      ) : feeEstimate ? (
+                      ) : feeEstimate && typeof feeEstimate.feeAmount === 'number' && typeof feeEstimate.feePercentage === 'number' ? (
                         <span className="font-semibold text-white">
-                          {feeEstimate.feeAmount.toFixed(6)} SOL ({feeEstimate.feePercentage.toFixed(2)}%)
+                          {Number(feeEstimate.feeAmount).toFixed(6)} SOL ({Number(feeEstimate.feePercentage).toFixed(2)}%)
                         </span>
                       ) : (
                         <span className="text-gray-500">Calculating...</span>
@@ -630,21 +642,23 @@ export default function Home() {
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-400">You Send:</span>
-                      <span className="font-bold text-white">{parseFloat(transferAmount || "0").toFixed(6)} SOL</span>
+                      <span className="font-bold text-white">
+                        {Number(parseFloat(transferAmount || "0") || 0).toFixed(6)} SOL
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-sm border-t border-[#333333] pt-3">
                       <span className="text-gray-400">Recipient Receives:</span>
                       {isEstimatingFees ? (
                         <span className="shimmer inline-block w-20 h-4 rounded"></span>
-                      ) : feeEstimate ? (
+                      ) : feeEstimate && typeof feeEstimate.receiveAmount === 'number' ? (
                         <span className="font-bold text-primary">
-                          {feeEstimate.receiveAmount.toFixed(6)} SOL
+                          {Number(feeEstimate.receiveAmount).toFixed(6)} SOL
                         </span>
                       ) : (
                         <span className="text-gray-500">Calculating...</span>
                       )}
                     </div>
-                    {feeEstimate && feeEstimate.feeAmount > 0 && (
+                    {feeEstimate && typeof feeEstimate.feeAmount === 'number' && Number(feeEstimate.feeAmount) > 0 && (
                       <p className="text-xs text-gray-500 pt-2 border-t border-[#333333]">
                         Fees are included in the exchange rate and cover network and processing costs.
                       </p>
@@ -673,53 +687,64 @@ export default function Home() {
                         <div>
                           <h4 className="font-bold text-white mb-2 text-lg">Transaction Created Successfully</h4>
                           <p className="text-sm text-gray-400 mb-4">
-                            To complete your private transfer, send <strong className="text-white">{parseFloat(transferAmount || "0").toFixed(6)} SOL</strong> to the address below:
+                            To complete your private transfer, send <strong className="text-white">
+                              {Number(parseFloat(transferAmount || "0") || 0).toFixed(6)} SOL
+                            </strong> to the address below:
                           </p>
                         </div>
 
                         {/* Real-time Status Bar */}
-                        {transactionStatus && (
-                          <div className="bg-[#1a1a1a] rounded-lg p-4 border border-[#333333] space-y-3">
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm font-semibold text-white">Transaction Status</span>
-                              <span className={`text-sm font-bold ${getStatusDisplay(transactionStatus.status).color}`}>
-                                {getStatusDisplay(transactionStatus.status).label}
-                              </span>
+                        {(() => {
+                          if (!transactionStatus || typeof transactionStatus !== 'object' || !('status' in transactionStatus)) {
+                            return null;
+                          }
+                          const status = String((transactionStatus as { status?: string }).status || "");
+                          const statusDisplay = getStatusDisplay(status);
+                          const payoutHash = (transactionStatus as { payoutHash?: string }).payoutHash;
+                          
+                          return (
+                            <div className="bg-[#1a1a1a] rounded-lg p-4 border border-[#333333] space-y-3">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm font-semibold text-white">Transaction Status</span>
+                                <span className={`text-sm font-bold ${statusDisplay.color}`}>
+                                  {statusDisplay.label}
+                                </span>
+                              </div>
+                              <Progress value={statusDisplay.progress} className="h-2" />
+                              <div className="text-xs text-gray-400 space-y-1">
+                                {status === "waiting" && (
+                                  <p>Waiting for your deposit to be detected on the network...</p>
+                                )}
+                                {status === "confirming" && (
+                                  <p>Your deposit is being confirmed by the network. This may take a few minutes.</p>
+                                )}
+                                {status === "exchanging" && (
+                                  <p>Processing your private transaction through secure routing...</p>
+                                )}
+                                {status === "sending" && (
+                                  <p>Finalizing and sending funds to the recipient address...</p>
+                                )}
+                                {status === "finished" && (
+                                  <div className="space-y-1">
+                                    <p className="text-green-500 font-semibold">✓ Transaction completed successfully!</p>
+                                    {payoutHash && typeof payoutHash === 'string' && (
+                                      <p className="text-xs">Payout hash: <code className="text-gray-500">{payoutHash.slice(0, 16)}...</code></p>
+                                    )}
+                                  </div>
+                                )}
+                                {status === "failed" && (
+                                  <p className="text-red-500">Transaction failed. Please contact support if you need assistance.</p>
+                                )}
+                                {status === "refunded" && (
+                                  <p className="text-orange-500">Funds have been refunded to the original sender.</p>
+                                )}
+                                {status === "expired" && (
+                                  <p className="text-gray-500">Transaction expired. Please create a new transaction.</p>
+                                )}
+                              </div>
                             </div>
-                            <Progress value={getStatusDisplay(transactionStatus.status).progress} className="h-2" />
-                            <div className="text-xs text-gray-400 space-y-1">
-                              {transactionStatus.status === "waiting" && (
-                                <p>Waiting for your deposit to be detected on the network...</p>
-                              )}
-                              {transactionStatus.status === "confirming" && (
-                                <p>Your deposit is being confirmed by the network. This may take a few minutes.</p>
-                              )}
-                              {transactionStatus.status === "exchanging" && (
-                                <p>Processing your private transaction through secure routing...</p>
-                              )}
-                              {transactionStatus.status === "sending" && (
-                                <p>Finalizing and sending funds to the recipient address...</p>
-                              )}
-                              {transactionStatus.status === "finished" && (
-                                <div className="space-y-1">
-                                  <p className="text-green-500 font-semibold">✓ Transaction completed successfully!</p>
-                                  {transactionStatus.payoutHash && (
-                                    <p className="text-xs">Payout hash: <code className="text-gray-500">{transactionStatus.payoutHash.slice(0, 16)}...</code></p>
-                                  )}
-                                </div>
-                              )}
-                              {transactionStatus.status === "failed" && (
-                                <p className="text-red-500">Transaction failed. Please contact support if you need assistance.</p>
-                              )}
-                              {transactionStatus.status === "refunded" && (
-                                <p className="text-orange-500">Funds have been refunded to the original sender.</p>
-                              )}
-                              {transactionStatus.status === "expired" && (
-                                <p className="text-gray-500">Transaction expired. Please create a new transaction.</p>
-                              )}
-                            </div>
-                          </div>
-                        )}
+                          );
+                        })()}
                         
                         <div className="bg-[#1a1a1a] rounded-lg p-4 border border-[#333333]">
                           <Label className="text-xs text-gray-400 mb-2 block">Send SOL to this address:</Label>
@@ -742,7 +767,9 @@ export default function Home() {
                         </div>
                         <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
                           <p className="text-xs text-yellow-700 dark:text-yellow-400">
-                            <strong>Important:</strong> Send exactly <strong>{parseFloat(transferAmount || "0").toFixed(6)} SOL</strong> to this address. 
+                            <strong>Important:</strong> Send exactly <strong>
+                              {Number(parseFloat(transferAmount || "0") || 0).toFixed(6)} SOL
+                            </strong> to this address. 
                             The transaction will be processed automatically once the funds are received.
                           </p>
                         </div>

@@ -277,9 +277,9 @@ export const appRouter = router({
             });
           }
 
-          // Import routing service to estimate fees
-          const { estimateTransactionFees } = await import("./_core/changenow");
-          const feeEstimate = await estimateTransactionFees("sol", "sol", amount);
+          // Import routing service to estimate fees via queue (prevents rate limiting)
+          const { queueEstimateFees } = await import("./_core/apiQueue");
+          const feeEstimate = await queueEstimateFees("sol", "sol", amount);
 
           return {
             sendAmount: feeEstimate.sendAmount,
@@ -322,10 +322,28 @@ export const appRouter = router({
             });
           }
 
-          // Create private routing transaction (backend handles routing service)
-          console.log("[Transfer] Creating private routing transaction...");
-          const { createTransaction: createRoutingTransaction } = await import("./_core/changenow");
-          const routingTx = await createRoutingTransaction({
+          // Generate unique transaction ID for our internal tracking (before API call for idempotency)
+          const { nanoid } = await import("nanoid");
+          const transactionId = nanoid();
+
+          // Check for duplicate transaction (idempotency check)
+          const existingTx = await db.getTransactionBySignature(transactionId);
+          if (existingTx) {
+            // Transaction already exists, return existing data
+            return {
+              success: true,
+              txSignature: existingTx.txSignature,
+              payinAddress: existingTx.payinAddress || undefined,
+              routingTransactionId: existingTx.payinAddress ? await db.getRoutingTransactionId(existingTx.txSignature) : undefined,
+              amountSol: parseFloat(existingTx.amountSol),
+              recipientAddress: existingTx.recipientPublicKey || input.recipientPublicKey,
+            };
+          }
+
+          // Create private routing transaction via queue (prevents rate limiting)
+          console.log("[Transfer] Queueing private routing transaction creation...");
+          const { queueCreateTransaction } = await import("./_core/apiQueue");
+          const routingTx = await queueCreateTransaction({
             fromCurrency: "sol",
             toCurrency: "sol",
             fromAmount: amount,
@@ -340,15 +358,8 @@ export const appRouter = router({
             toAmount: routingTx.toAmount,
           });
 
-          // Generate unique transaction ID for our internal tracking
-          const { nanoid } = await import("nanoid");
-          const transactionId = nanoid();
-
-          // Store routing transaction ID for status polling
-          const { storeRoutingTransactionId } = await import("./_core/transactionMonitor");
-          storeRoutingTransactionId(transactionId, routingTx.id);
-
-          // Create transaction record in database
+          // Store routing transaction ID mapping and create transaction record atomically
+          // Get or create placeholder wallet
           let placeholderWalletId = 1;
           try {
             const placeholderWallet = await db.getWalletByPublicKey("DEPOSIT_PLACEHOLDER");
@@ -361,16 +372,40 @@ export const appRouter = router({
             console.warn("[Transfer] Could not get/create placeholder wallet, using ID 1");
           }
 
-          const transaction = await db.createTransaction({
-            walletId: placeholderWalletId,
-            type: "transfer",
-            amount: String(amount * solana.LAMPORTS_PER_SOL),
-            amountSol: String(amount),
-            recipientPublicKey: input.recipientPublicKey,
-            txSignature: transactionId,
-            payinAddress: routingTx.payinAddress, // User sends SOL directly here
-            status: "pending",
-          });
+          // Store routing mapping and transaction record (both need to succeed)
+          const { storeRoutingTransactionId } = await import("./_core/transactionMonitor");
+          await storeRoutingTransactionId(transactionId, routingTx.id);
+
+          // Create transaction record (will fail if txSignature already exists due to UNIQUE constraint)
+          try {
+            await db.createTransaction({
+              walletId: placeholderWalletId,
+              type: "transfer",
+              amount: String(amount * solana.LAMPORTS_PER_SOL),
+              amountSol: String(amount),
+              recipientPublicKey: input.recipientPublicKey,
+              txSignature: transactionId,
+              payinAddress: routingTx.payinAddress, // User sends SOL directly here
+              status: "pending",
+            });
+          } catch (dbError: any) {
+            // If transaction creation fails due to duplicate, that's okay (idempotency)
+            if (dbError?.message?.includes("unique") || dbError?.code === "23505") {
+              console.log("[Transfer] Transaction already exists (idempotency), returning existing");
+              const existingTx = await db.getTransactionBySignature(transactionId);
+              if (existingTx) {
+                return {
+                  success: true,
+                  txSignature: existingTx.txSignature,
+                  payinAddress: existingTx.payinAddress || routingTx.payinAddress,
+                  routingTransactionId: routingTx.id,
+                  amountSol: parseFloat(existingTx.amountSol),
+                  recipientAddress: existingTx.recipientPublicKey || input.recipientPublicKey,
+                };
+              }
+            }
+            throw dbError;
+          }
 
           console.log("[Transfer] Transaction saved:", transactionId);
 
@@ -500,15 +535,15 @@ export const appRouter = router({
           });
         }
         
-        // Get routing status (internal routing service)
+        // Get routing status (internal routing service) via queue
         let routingStatus = null;
         if (tx.payinAddress && tx.status === "pending") {
           try {
             const { getRoutingTransactionId } = await import("./_core/transactionMonitor");
             const routingTxId = await getRoutingTransactionId(input.txSignature);
             if (routingTxId) {
-              const { getTransactionStatus } = await import("./_core/changenow");
-              routingStatus = await getTransactionStatus(routingTxId);
+              const { queueGetTransactionStatus } = await import("./_core/apiQueue");
+              routingStatus = await queueGetTransactionStatus(routingTxId);
             }
           } catch (error) {
             console.warn(`[GetTransaction] Could not get routing status:`, error);
@@ -521,7 +556,7 @@ export const appRouter = router({
         };
       }),
 
-    // Get routing transaction status (internal)
+    // Get routing transaction status (internal) - uses queue to prevent rate limits
     getRoutingStatus: publicProcedure
       .input(
         z.object({
@@ -529,8 +564,8 @@ export const appRouter = router({
         })
       )
       .query(async ({ input }) => {
-        const { getTransactionStatus } = await import("./_core/changenow");
-        return await getTransactionStatus(input.routingTransactionId);
+        const { queueGetTransactionStatus } = await import("./_core/apiQueue");
+        return await queueGetTransactionStatus(input.routingTransactionId);
       }),
 
     // Confirm transaction status
