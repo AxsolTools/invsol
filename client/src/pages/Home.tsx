@@ -342,11 +342,11 @@ export default function Home() {
                               <span className="text-primary font-mono text-xs tracking-[0.3em] opacity-60">STEP ONE</span>
                             </div>
                             <h3 className="text-5xl md:text-6xl font-black text-white mb-6 leading-tight tracking-tighter">
-                              CONNECT<br />YOUR WALLET
+                              ENTER TRANSFER<br />DETAILS
                             </h3>
                             <div className="w-20 h-1 bg-primary mb-6"></div>
                             <p className="text-lg text-gray-300 leading-relaxed">
-                              Click the "Select Wallet" button and choose your Solana wallet. NULLROUTE does not require any account creation - your wallet is your identity.
+                              Navigate to the "Transfer" tab and enter the recipient's Solana wallet address and the amount of SOL you want to send privately.
                             </p>
                           </div>
                         </div>
@@ -356,7 +356,7 @@ export default function Home() {
                           <div className="absolute inset-0 border-2 border-primary/20 transform rotate-6"></div>
                           <div className="relative bg-[#0a0a0a] border-2 border-primary p-8 transform -rotate-2 hover:rotate-0 transition-transform duration-300">
                             <div className="text-4xl font-black text-primary mb-4">→</div>
-                            <div className="text-sm text-gray-400 font-mono">WALLET CONNECTION</div>
+                            <div className="text-sm text-gray-400 font-mono">TRANSFER FORM</div>
                           </div>
                         </div>
                       </div>
@@ -371,7 +371,7 @@ export default function Home() {
                           <div className="absolute inset-0 border-2 border-primary/20 transform -rotate-6"></div>
                           <div className="relative bg-[#0a0a0a] border-2 border-primary p-8 transform rotate-2 hover:rotate-0 transition-transform duration-300">
                             <div className="text-4xl font-black text-primary mb-4">→</div>
-                            <div className="text-sm text-gray-400 font-mono">TRANSFER DETAILS</div>
+                            <div className="text-sm text-gray-400 font-mono">TRANSACTION CREATION</div>
                           </div>
                         </div>
                       </div>
@@ -383,11 +383,11 @@ export default function Home() {
                               <span className="text-primary font-mono text-xs tracking-[0.3em] opacity-60">STEP TWO</span>
                             </div>
                             <h3 className="text-5xl md:text-6xl font-black text-white mb-6 leading-tight tracking-tighter">
-                              ENTER TRANSFER<br />DETAILS
+                              CREATE TRANSACTION
                             </h3>
                             <div className="w-20 h-1 bg-primary mb-6 md:ml-auto"></div>
                             <p className="text-lg text-gray-300 leading-relaxed">
-                              Navigate to the "Transfer" tab and enter the recipient's Solana wallet address and the amount of SOL you want to send.
+                              Click "Create Transaction" to generate a private deposit address. Review the fee estimate and transaction details before proceeding.
                             </p>
                           </div>
                         </div>
