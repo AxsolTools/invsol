@@ -53,9 +53,11 @@ export async function setupVite(app: Express, server: Server) {
 }
 
 export function serveStatic(app: Express) {
-  // Use __dirname for reliable path resolution in bundled code
-  const distPath = path.resolve(__dirname, "../..", "dist", "public");
+  // Use process.cwd() since bundled code runs from app root
+  // DigitalOcean runs from the app root directory
+  const distPath = path.resolve(process.cwd(), "dist", "public");
   
+  console.log(`[Static] Working directory: ${process.cwd()}`);
   console.log(`[Static] Serving from: ${distPath}`);
   console.log(`[Static] Directory exists: ${fs.existsSync(distPath)}`);
   
@@ -63,15 +65,12 @@ export function serveStatic(app: Express) {
     console.error(
       `Could not find the build directory: ${distPath}, make sure to build the client first`
     );
-    // Try alternative path (in case bundling changes structure)
-    const altPath = path.resolve(process.cwd(), "dist", "public");
-    console.log(`[Static] Trying alternative path: ${altPath}`);
-    if (fs.existsSync(altPath)) {
-      app.use(express.static(altPath));
-      app.use("*", (_req, res) => {
-        res.sendFile(path.resolve(altPath, "index.html"));
-      });
-      return;
+    // List what's in the current directory for debugging
+    try {
+      const files = fs.readdirSync(process.cwd());
+      console.log(`[Static] Files in cwd: ${files.join(", ")}`);
+    } catch (e) {
+      console.error(`[Static] Error reading cwd:`, e);
     }
     return;
   }
