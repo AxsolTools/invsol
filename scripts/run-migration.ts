@@ -17,11 +17,19 @@ async function runMigration() {
     process.exit(1);
   }
 
-  const migrationFile = join(process.cwd(), "drizzle", "0005_add_transaction_routing_and_constraints.sql");
+  // Run migrations in order
+  const migrationFiles = [
+    join(process.cwd(), "drizzle", "0004_postgres_migration.sql"),
+    join(process.cwd(), "drizzle", "0005_add_transaction_routing_and_constraints.sql"),
+  ];
   
   try {
-    console.log("📄 Reading migration file:", migrationFile);
-    const sql = readFileSync(migrationFile, "utf-8");
+    let allSql = "";
+    for (const migrationFile of migrationFiles) {
+      console.log("📄 Reading migration file:", migrationFile);
+      allSql += readFileSync(migrationFile, "utf-8") + "\n";
+    }
+    const sql = allSql;
     
     console.log("🔌 Connecting to database...");
     const db = postgres(databaseUrl);
