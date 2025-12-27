@@ -4,7 +4,7 @@ export const APP_TITLE = import.meta.env.VITE_APP_TITLE || "App";
 
 export const APP_LOGO = "/logo.png";
 
-export const COMMUNITY_URL = "https://x.com/nullrotue";
+export const COMMUNITY_URL = "https://x.com/NullRouteOS";
 export const GITHUB_URL = "https://github.com/Lightprotocol/light-protocol";
 
 // Generate login URL at runtime so redirect URI reflects the current origin.
