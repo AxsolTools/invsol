@@ -362,7 +362,8 @@ export const appRouter = router({
           const { nanoid } = await import("nanoid");
           const userTxRef = `NR-${nanoid(8).toUpperCase()}`;
           
-          console.log("[Transfer] Transaction created successfully");
+          // Log full ChangeNow ID for debugging (verify no truncation)
+          console.log("[Transfer] Transaction created successfully, ChangeNow ID:", routingTx.id, "Length:", routingTx.id?.length);
 
           // Try to store in database (optional - don't fail if DB unavailable)
           let dbPersisted = false;
@@ -547,19 +548,34 @@ export const appRouter = router({
         })
       )
       .query(async ({ input }) => {
-        const { queueGetTransactionStatus } = await import("./_core/apiQueue");
-        const rawStatus: any = await queueGetTransactionStatus(input.routingTransactionId);
-        
-        // Return only sanitized status info - hide internal details
-        return {
-          status: rawStatus.status as string,
-          fromAmount: rawStatus.fromAmount as number,
-          toAmount: rawStatus.toAmount as number,
-          // Only show truncated payout hash when completed (for user verification)
-          payoutHash: rawStatus.payoutHash ? `${String(rawStatus.payoutHash).slice(0, 16)}...` : undefined,
-          createdAt: rawStatus.createdAt as string,
-          updatedAt: rawStatus.updatedAt as string,
-        };
+        try {
+          const { queueGetTransactionStatus } = await import("./_core/apiQueue");
+          const rawStatus: any = await queueGetTransactionStatus(input.routingTransactionId);
+          
+          // Return only sanitized status info - hide internal details
+          return {
+            status: rawStatus.status as string,
+            fromAmount: rawStatus.fromAmount as number,
+            toAmount: rawStatus.toAmount as number,
+            // Only show truncated payout hash when completed (for user verification)
+            payoutHash: rawStatus.payoutHash ? `${String(rawStatus.payoutHash).slice(0, 16)}...` : undefined,
+            createdAt: rawStatus.createdAt as string,
+            updatedAt: rawStatus.updatedAt as string,
+          };
+        } catch (error) {
+          // If transaction not found yet (404) or API error, return waiting status
+          // This prevents 500 errors from flooding the frontend during initial polling
+          console.warn("[getRoutingStatus] Status check failed, returning waiting:", 
+            error instanceof Error ? error.message : error);
+          return {
+            status: "waiting",
+            fromAmount: 0,
+            toAmount: 0,
+            payoutHash: undefined,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+        }
       }),
 
     // Confirm transaction status

@@ -207,7 +207,7 @@ export async function getTransactionStatus(
     throw new Error("ChangeNow API key is not configured");
   }
 
-  const url = `${CHANGENOW_API_URL}/exchange/${transactionId}`;
+  const url = `${CHANGENOW_API_URL}/exchange/by-id/${transactionId}`;
 
   try {
     const response = await fetch(url, {
