@@ -30,6 +30,14 @@ async function startServer() {
   const app = express();
   const server = createServer(app);
   
+  // Verify ChangeNow API key is configured at startup
+  const changenowApiKey = process.env.CHANGENOW_API_KEY;
+  if (!changenowApiKey) {
+    console.warn("[Server] ⚠️  WARNING: CHANGENOW_API_KEY environment variable is not set. Fee estimation and transactions will fail.");
+  } else {
+    console.log("[Server] ✓ ChangeNow API key is configured");
+  }
+  
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));

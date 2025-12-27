@@ -67,7 +67,7 @@ export async function createTransaction(
   params: ChangeNowTransactionParams
 ): Promise<ChangeNowTransactionResponse> {
   const apiKey = getChangeNowApiKey();
-  if (!apiKey) {
+  if (!apiKey || apiKey.trim() === "") {
     throw new Error("ChangeNow API key is not configured. Please set CHANGENOW_API_KEY environment variable.");
   }
 
@@ -203,7 +203,7 @@ export async function getTransactionStatus(
   transactionId: string
 ): Promise<ChangeNowTransactionStatus> {
   const apiKey = getChangeNowApiKey();
-  if (!apiKey) {
+  if (!apiKey || apiKey.trim() === "") {
     throw new Error("ChangeNow API key is not configured");
   }
 
@@ -239,7 +239,7 @@ export async function getTransactionStatus(
  */
 export async function getAvailableCurrencies(): Promise<any[]> {
   const apiKey = getChangeNowApiKey();
-  if (!apiKey) {
+  if (!apiKey || apiKey.trim() === "") {
     throw new Error("ChangeNow API key is not configured");
   }
 
@@ -283,7 +283,7 @@ export async function getExchangeRate(
   rate: number;
 }> {
   const apiKey = getChangeNowApiKey();
-  if (!apiKey) {
+  if (!apiKey || apiKey.trim() === "") {
     throw new Error("ChangeNow API key is not configured");
   }
 
@@ -346,7 +346,7 @@ export async function estimateTransactionFees(
   isValid: boolean;
 }> {
   const apiKey = getChangeNowApiKey();
-  if (!apiKey) {
+  if (!apiKey || apiKey.trim() === "") {
     throw new Error("API key is not configured");
   }
 
