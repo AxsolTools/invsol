@@ -315,9 +315,18 @@ export const appRouter = router({
           })
           .nullish()
       )
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
         try {
-          if (!input) {
+          // Some environments (proxies/CDN) can strip the body; attempt to recover the raw input from the batch request for better resilience.
+          const rawInput =
+            Array.isArray((ctx.req as any)?.body) && (ctx.req as any)?.body.length > 0
+              ? (ctx.req as any).body[0]?.params?.input
+              : (ctx.req as any)?.body?.input;
+
+          const payload = input ?? rawInput;
+
+          if (!payload) {
+            console.error("[Transfer] Missing payload. Raw body:", (ctx.req as any)?.body);
             throw new TRPCError({
               code: "BAD_REQUEST",
               message: "Missing transfer payload (recipientPublicKey, amountSol)",
@@ -325,14 +334,14 @@ export const appRouter = router({
           }
 
           // Validate recipient
-          if (!solana.isValidPublicKey(input.recipientPublicKey)) {
+          if (!solana.isValidPublicKey(payload.recipientPublicKey)) {
             throw new TRPCError({
               code: "BAD_REQUEST",
               message: "Invalid recipient public key",
             });
           }
 
-          const amount = parseFloat(input.amountSol);
+          const amount = parseFloat(payload.amountSol);
           if (isNaN(amount) || amount <= 0) {
             throw new TRPCError({
               code: "BAD_REQUEST",
@@ -354,7 +363,7 @@ export const appRouter = router({
               payinAddress: existingTx.payinAddress || undefined,
               routingTransactionId: existingTx.payinAddress ? await db.getRoutingTransactionId(existingTx.txSignature) : undefined,
               amountSol: parseFloat(existingTx.amountSol),
-              recipientAddress: existingTx.recipientPublicKey || input.recipientPublicKey,
+              recipientAddress: existingTx.recipientPublicKey || payload.recipientPublicKey,
             };
           }
 
@@ -367,7 +376,7 @@ export const appRouter = router({
             fromNetwork: "sol",
             toNetwork: "sol",
             fromAmount: amount,
-            address: input.recipientPublicKey,
+            address: payload.recipientPublicKey,
             flow: "standard",
           });
 
@@ -403,7 +412,7 @@ export const appRouter = router({
             type: "transfer",
             amount: String(amount * solana.LAMPORTS_PER_SOL),
             amountSol: String(amount),
-            recipientPublicKey: input.recipientPublicKey,
+            recipientPublicKey: payload.recipientPublicKey,
             txSignature: transactionId,
             payinAddress: routingTx.payinAddress, // User sends SOL directly here
             status: "pending",
@@ -420,7 +429,7 @@ export const appRouter = router({
                   payinAddress: existingTx.payinAddress || routingTx.payinAddress,
                   routingTransactionId: routingTx.id,
                   amountSol: parseFloat(existingTx.amountSol),
-                  recipientAddress: existingTx.recipientPublicKey || input.recipientPublicKey,
+                  recipientAddress: existingTx.recipientPublicKey || payload.recipientPublicKey,
                 };
               }
             }
@@ -435,7 +444,7 @@ export const appRouter = router({
             payinAddress: routingTx.payinAddress, // Deposit address for user (frontend expects this field name)
             routingTransactionId: routingTx.id, // Internal routing ID
             amountSol: amount,
-            recipientAddress: input.recipientPublicKey,
+            recipientAddress: payload.recipientPublicKey,
           };
         } catch (error) {
           // Handle specific error types
