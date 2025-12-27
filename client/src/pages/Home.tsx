@@ -221,7 +221,18 @@ export default function Home() {
             </div>
 
             {/* Right side */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText("B7tP6jNAcSmnvcuKsTFdvTAJHMkEQaXse8TMxoq2pump");
+                  toast.success("Contract address copied!");
+                }}
+                className="hidden lg:flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-mono bg-[#1a1a1a] border border-[#333333] text-gray-400 hover:text-white hover:border-primary transition-all"
+                title="Click to copy contract address"
+              >
+                <span className="text-primary font-semibold">$NULL</span>
+                <span className="text-gray-500">B7tP...pump</span>
+              </button>
               <a
                 href={COMMUNITY_URL}
                 target="_blank"
