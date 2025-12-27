@@ -16,7 +16,6 @@ export interface CurrencyConfig {
   networks: NetworkConfig[];
   defaultNetwork: string;
   decimals: number;
-  minAmount: number;    // Minimum amount for transfers
 }
 
 // Address validation patterns for each blockchain type
@@ -68,7 +67,6 @@ export const SUPPORTED_CURRENCIES: CurrencyConfig[] = [
     ],
     defaultNetwork: "sol",
     decimals: 9,
-    minAmount: 0.1,
   },
   {
     ticker: "btc",
@@ -79,7 +77,6 @@ export const SUPPORTED_CURRENCIES: CurrencyConfig[] = [
     ],
     defaultNetwork: "btc",
     decimals: 8,
-    minAmount: 0.0005,
   },
   {
     ticker: "eth",
@@ -93,7 +90,6 @@ export const SUPPORTED_CURRENCIES: CurrencyConfig[] = [
     ],
     defaultNetwork: "eth",
     decimals: 18,
-    minAmount: 0.005,
   },
   {
     ticker: "bnb",
@@ -105,7 +101,6 @@ export const SUPPORTED_CURRENCIES: CurrencyConfig[] = [
     ],
     defaultNetwork: "bsc",
     decimals: 18,
-    minAmount: 0.01,
   },
   {
     ticker: "xrp",
@@ -116,7 +111,6 @@ export const SUPPORTED_CURRENCIES: CurrencyConfig[] = [
     ],
     defaultNetwork: "xrp",
     decimals: 6,
-    minAmount: 10,
   },
   {
     ticker: "usdt",
@@ -133,7 +127,6 @@ export const SUPPORTED_CURRENCIES: CurrencyConfig[] = [
     ],
     defaultNetwork: "eth",
     decimals: 6,
-    minAmount: 10,
   },
   {
     ticker: "usdc",
@@ -148,7 +141,6 @@ export const SUPPORTED_CURRENCIES: CurrencyConfig[] = [
     ],
     defaultNetwork: "eth",
     decimals: 6,
-    minAmount: 10,
   },
 ];
 

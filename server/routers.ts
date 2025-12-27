@@ -276,7 +276,6 @@ export const appRouter = router({
         symbol: c.symbol,
         networks: c.networks,
         defaultNetwork: c.defaultNetwork,
-        minAmount: c.minAmount,
       }));
     }),
 
@@ -315,18 +314,6 @@ export const appRouter = router({
               code: "BAD_REQUEST",
               message: `Unsupported network ${input.network} for ${currencyConfig.symbol}`,
             });
-          }
-
-          // Check minimum amount
-          if (amount < currencyConfig.minAmount) {
-            return {
-              sendAmount: amount,
-              receiveAmount: 0,
-              feeAmount: 0,
-              feePercentage: 0,
-              isValid: false,
-              error: `Minimum amount is ${currencyConfig.minAmount} ${currencyConfig.symbol}`,
-            };
           }
 
           // Direct ChangeNow estimate call with selected currency/network
@@ -419,14 +406,6 @@ export const appRouter = router({
             throw new TRPCError({
               code: "BAD_REQUEST",
               message: "Invalid amount",
-            });
-          }
-
-          // Check minimum amount
-          if (amount < currencyConfig.minAmount) {
-            throw new TRPCError({
-              code: "BAD_REQUEST",
-              message: `Minimum amount is ${currencyConfig.minAmount} ${currencyConfig.symbol}`,
             });
           }
 

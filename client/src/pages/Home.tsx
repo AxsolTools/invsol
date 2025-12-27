@@ -163,12 +163,6 @@ export default function Home() {
       return;
     }
 
-    // Check minimum amount
-    if (currentCurrency && amount < currentCurrency.minAmount) {
-      toast.error(`Minimum amount is ${currentCurrency.minAmount} ${currentCurrency.symbol}`);
-      return;
-    }
-
     // Ensure amount is a valid string representation
     const amountStr = amount.toString();
     if (!amountStr || amountStr === "NaN" || amountStr === "Infinity") {
@@ -716,11 +710,6 @@ export default function Home() {
                 <div>
                   <Label htmlFor="transfer-amount" className="text-sm font-semibold mb-2 block text-white">
                     Amount ({currentCurrency?.symbol || "SOL"})
-                    {currentCurrency && (
-                      <span className="text-gray-500 font-normal ml-2">
-                        Min: {currentCurrency.minAmount} {currentCurrency.symbol}
-                      </span>
-                    )}
                   </Label>
                   <Input
                     id="transfer-amount"
@@ -736,10 +725,6 @@ export default function Home() {
                 {/* Fee Estimation Display */}
                 {transferAmount && parseFloat(transferAmount) > 0 && !isNaN(parseFloat(transferAmount)) && (
                   <div className="rounded-lg bg-[#1a1a1a] border border-[#333333] p-5 space-y-3">
-                    {/* Show error if below minimum */}
-                    {feeEstimate && 'error' in feeEstimate && feeEstimate.error && (
-                      <div className="text-red-500 text-sm font-semibold">{feeEstimate.error}</div>
-                    )}
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-400">Transaction Fee:</span>
                       {isEstimatingFees ? (
