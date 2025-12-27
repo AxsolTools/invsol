@@ -237,9 +237,10 @@ export const appRouter = router({
           // Perform shield operation via Light Protocol
           const txSignature = await solana.shieldAssets(input.publicKey, amount);
 
+          const walletRecord: any = wallet;
           // Record transaction
           await db.createTransaction({
-            walletId: wallet.id,
+            walletId: walletRecord?.id,
             type: "shield",
             amount: String(amount * solana.LAMPORTS_PER_SOL),
             amountSol: String(amount),
@@ -327,7 +328,7 @@ export const appRouter = router({
           const transactionId = nanoid();
 
           // Check for duplicate transaction (idempotency check)
-          const existingTx = await db.getTransactionBySignature(transactionId);
+          const existingTx: any = await db.getTransactionBySignature(transactionId);
           if (existingTx) {
             // Transaction already exists, return existing data
             return {
@@ -364,7 +365,7 @@ export const appRouter = router({
           // Get or create placeholder wallet
           let placeholderWalletId = 1;
           try {
-            const placeholderWallet = await db.getWalletByPublicKey("DEPOSIT_PLACEHOLDER");
+            const placeholderWallet: any = await db.getWalletByPublicKey("DEPOSIT_PLACEHOLDER");
             if (placeholderWallet) {
               placeholderWalletId = placeholderWallet.id;
             } else {
@@ -394,7 +395,7 @@ export const appRouter = router({
             // If transaction creation fails due to duplicate, that's okay (idempotency)
             if (dbError?.message?.includes("unique") || dbError?.code === "23505") {
               console.log("[Transfer] Transaction already exists (idempotency), returning existing");
-              const existingTx = await db.getTransactionBySignature(transactionId);
+              const existingTx: any = await db.getTransactionBySignature(transactionId);
               if (existingTx) {
                 return {
                   success: true,
@@ -513,7 +514,7 @@ export const appRouter = router({
         })
       )
       .query(async ({ input }) => {
-        const wallet = await db.getWalletByPublicKey(input.publicKey);
+        const wallet: any = await db.getWalletByPublicKey(input.publicKey);
         if (!wallet) {
           return [];
         }
@@ -529,7 +530,7 @@ export const appRouter = router({
         })
       )
       .query(async ({ input }) => {
-        const tx = await db.getTransactionBySignature(input.txSignature);
+        const tx: any = await db.getTransactionBySignature(input.txSignature);
         if (!tx) {
           throw new TRPCError({
             code: "NOT_FOUND",
