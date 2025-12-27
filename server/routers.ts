@@ -344,8 +344,8 @@ export const appRouter = router({
           console.log("[Transfer] Queueing private routing transaction creation...");
           const { queueCreateTransaction } = await import("./_core/apiQueue");
           const routingTx = await queueCreateTransaction({
-            fromCurrency: "sol",
-            toCurrency: "sol",
+            fromCurrency: "SOL",
+            toCurrency: "SOL",
             fromNetwork: "solana",
             toNetwork: "solana",
             fromAmount: amount,

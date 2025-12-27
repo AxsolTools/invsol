@@ -83,8 +83,9 @@ export async function createTransaction(
   }
 
   const requestBody: any = {
-    fromCurrency: params.fromCurrency.toLowerCase(),
-    toCurrency: params.toCurrency.toLowerCase(),
+    // Use the exact currency codes expected by ChangeNow (case-sensitive)
+    fromCurrency: params.fromCurrency,
+    toCurrency: params.toCurrency,
     // Explicitly set networks to avoid API pair/network errors
     fromNetwork: params.fromNetwork || "solana",
     toNetwork: params.toNetwork || "solana",
@@ -270,8 +271,8 @@ export async function getAvailableCurrencies(): Promise<any[]> {
  * Get exchange rate for SOL to SOL
  */
 export async function getExchangeRate(
-  fromCurrency: string = "sol",
-  toCurrency: string = "sol",
+  fromCurrency: string = "SOL",
+  toCurrency: string = "SOL",
   fromNetwork: string = "solana",
   toNetwork: string = "solana",
   fromAmount?: number,
@@ -289,10 +290,10 @@ export async function getExchangeRate(
   }
 
   const url = new URL(`${CHANGENOW_API_URL}/exchange/range`);
-  url.searchParams.set("fromCurrency", fromCurrency.toLowerCase());
-  url.searchParams.set("toCurrency", toCurrency.toLowerCase());
-  url.searchParams.set("fromNetwork", fromNetwork.toLowerCase());
-  url.searchParams.set("toNetwork", toNetwork.toLowerCase());
+  url.searchParams.set("fromCurrency", fromCurrency);
+  url.searchParams.set("toCurrency", toCurrency);
+  url.searchParams.set("fromNetwork", fromNetwork);
+  url.searchParams.set("toNetwork", toNetwork);
   if (fromAmount) {
     url.searchParams.set("fromAmount", fromAmount.toString());
   }
@@ -338,8 +339,8 @@ export async function getExchangeRate(
  * Returns fee information without exposing ChangeNow branding
  */
 export async function estimateTransactionFees(
-  fromCurrency: string = "sol",
-  toCurrency: string = "sol",
+  fromCurrency: string = "SOL",
+  toCurrency: string = "SOL",
   fromNetwork: string = "solana",
   toNetwork: string = "solana",
   fromAmount: number
