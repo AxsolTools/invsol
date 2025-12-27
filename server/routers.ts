@@ -462,12 +462,14 @@ export const appRouter = router({
             });
           }
 
+          const walletRecord: any = wallet;
+
           // Perform unshield operation via Light Protocol
           const txSignature = await solana.unshieldAssets(input.publicKey, amount);
 
           // Record transaction
           await db.createTransaction({
-            walletId: wallet.id,
+            walletId: walletRecord?.id,
             type: "unshield",
             amount: String(amount * solana.LAMPORTS_PER_SOL),
             amountSol: String(amount),
