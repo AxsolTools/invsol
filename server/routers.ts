@@ -3,6 +3,13 @@ import { publicProcedure, router } from "./_core/trpc";
 import * as db from "./db";
 import * as solana from "./solana";
 import { TRPCError } from "@trpc/server";
+import { 
+  SUPPORTED_CURRENCIES, 
+  getCurrency, 
+  getNetwork, 
+  isValidAddress, 
+  getAddressValidationError 
+} from "./_core/currencies";
 
 export const appRouter = router({
   // Wallet operations
@@ -261,16 +268,30 @@ export const appRouter = router({
         }
       }),
 
+    // Get supported currencies and their networks
+    getSupportedCurrencies: publicProcedure.query(() => {
+      return SUPPORTED_CURRENCIES.map(c => ({
+        ticker: c.ticker,
+        name: c.name,
+        symbol: c.symbol,
+        networks: c.networks,
+        defaultNetwork: c.defaultNetwork,
+        minAmount: c.minAmount,
+      }));
+    }),
+
     // Estimate transaction fees (before processing)
     estimateFees: publicProcedure
       .input(
         z.object({
-          amountSol: z.string(),
+          amount: z.string(),
+          currency: z.string().default("sol"),
+          network: z.string().default("sol"),
         })
       )
       .query(async ({ input }) => {
         try {
-          const amount = parseFloat(input.amountSol);
+          const amount = parseFloat(input.amount);
           if (isNaN(amount) || amount <= 0) {
             throw new TRPCError({
               code: "BAD_REQUEST",
@@ -278,14 +299,44 @@ export const appRouter = router({
             });
           }
 
-          // Direct ChangeNow estimate call (bypass queue) with lowercase sol/sol
+          // Validate currency exists
+          const currencyConfig = getCurrency(input.currency);
+          if (!currencyConfig) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: `Unsupported currency: ${input.currency}`,
+            });
+          }
+
+          // Validate network exists for this currency
+          const networkConfig = getNetwork(input.currency, input.network);
+          if (!networkConfig) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: `Unsupported network ${input.network} for ${currencyConfig.symbol}`,
+            });
+          }
+
+          // Check minimum amount
+          if (amount < currencyConfig.minAmount) {
+            return {
+              sendAmount: amount,
+              receiveAmount: 0,
+              feeAmount: 0,
+              feePercentage: 0,
+              isValid: false,
+              error: `Minimum amount is ${currencyConfig.minAmount} ${currencyConfig.symbol}`,
+            };
+          }
+
+          // Direct ChangeNow estimate call with selected currency/network
           // ChangeNow API requires lowercase currency tickers and network names
           const { estimateTransactionFees } = await import("./_core/changenow");
           const feeEstimate = await estimateTransactionFees(
-            "sol",
-            "sol",
-            "sol",
-            "sol",
+            input.currency.toLowerCase(),
+            input.currency.toLowerCase(), // Same currency for privacy
+            input.network.toLowerCase(),
+            input.network.toLowerCase(),
             amount
           );
 
@@ -295,8 +346,10 @@ export const appRouter = router({
             feeAmount: Number(feeEstimate.feeAmount ?? 0),
             feePercentage: Number(feeEstimate.feePercentage ?? 0),
             isValid: !!feeEstimate.isValid,
+            currency: currencyConfig.symbol,
           };
         } catch (error) {
+          if (error instanceof TRPCError) throw error;
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
             message: error instanceof Error ? error.message : "Failed to estimate fees",
@@ -304,40 +357,64 @@ export const appRouter = router({
         }
       }),
 
-    // Create transfer - user sends SOL to deposit wallet via ChangeNow
+    // Create transfer - user sends crypto to deposit wallet via exchange routing
     transfer: publicProcedure
       .input(
         z
           .object({
-            recipientPublicKey: z.string().min(32).max(64),
-            amountSol: z.string(),
+            recipientAddress: z.string().min(20).max(100),
+            amount: z.string(),
+            currency: z.string().default("sol"),
+            network: z.string().default("sol"),
           })
           .nullish()
       )
       .mutation(async ({ input, ctx }) => {
         try {
-          // tRPC v11 batch format: {"0": {"json": {recipientPublicKey, amountSol}}}
+          // tRPC v11 batch format: {"0": {"json": {...}}}
           const rawBody = (ctx.req as any)?.body;
           const batchInput = rawBody?.["0"]?.json;
           const payload = input ?? batchInput;
 
-          if (!payload || !payload.recipientPublicKey || !payload.amountSol) {
+          if (!payload || !payload.recipientAddress || !payload.amount) {
             console.error("[Transfer] Missing payload. input:", input, "batchInput:", batchInput);
             throw new TRPCError({
               code: "BAD_REQUEST",
-              message: "Missing transfer payload (recipientPublicKey, amountSol)",
+              message: "Missing transfer payload (recipientAddress, amount)",
             });
           }
 
-          // Validate recipient
-          if (!solana.isValidPublicKey(payload.recipientPublicKey)) {
+          // Get currency/network with defaults
+          const currency = (payload.currency || "sol").toLowerCase();
+          const network = (payload.network || currency).toLowerCase();
+
+          // Validate currency exists
+          const currencyConfig = getCurrency(currency);
+          if (!currencyConfig) {
             throw new TRPCError({
               code: "BAD_REQUEST",
-              message: "Invalid recipient public key",
+              message: `Unsupported currency: ${currency}`,
             });
           }
 
-          const amount = parseFloat(payload.amountSol);
+          // Validate network exists for this currency
+          const networkConfig = getNetwork(currency, network);
+          if (!networkConfig) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: `Unsupported network ${network} for ${currencyConfig.symbol}`,
+            });
+          }
+
+          // Validate recipient address format based on network
+          if (!isValidAddress(payload.recipientAddress, network)) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: getAddressValidationError(network),
+            });
+          }
+
+          const amount = parseFloat(payload.amount);
           if (isNaN(amount) || amount <= 0) {
             throw new TRPCError({
               code: "BAD_REQUEST",
@@ -345,16 +422,24 @@ export const appRouter = router({
             });
           }
 
-          // Create private routing transaction via ChangeNow API
-          console.log("[Transfer] Creating ChangeNow transaction...");
+          // Check minimum amount
+          if (amount < currencyConfig.minAmount) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: `Minimum amount is ${currencyConfig.minAmount} ${currencyConfig.symbol}`,
+            });
+          }
+
+          // Create private routing transaction via exchange API
+          console.log(`[Transfer] Creating transaction: ${amount} ${currencyConfig.symbol} on ${network}`);
           const { queueCreateTransaction } = await import("./_core/apiQueue");
           const routingTx: any = await queueCreateTransaction({
-            fromCurrency: "sol",
-            toCurrency: "sol",
-            fromNetwork: "sol",
-            toNetwork: "sol",
+            fromCurrency: currency,
+            toCurrency: currency, // Same currency for privacy
+            fromNetwork: network,
+            toNetwork: network,
             fromAmount: amount,
-            address: payload.recipientPublicKey,
+            address: payload.recipientAddress.trim(),
             flow: "standard",
           });
 
@@ -362,45 +447,42 @@ export const appRouter = router({
           const { nanoid } = await import("nanoid");
           const userTxRef = `NR-${nanoid(8).toUpperCase()}`;
           
-          // Log full ChangeNow ID for debugging (verify no truncation)
-          console.log("[Transfer] Transaction created successfully, ChangeNow ID:", routingTx.id, "Length:", routingTx.id?.length);
+          // Log for debugging
+          console.log("[Transfer] Transaction created successfully, ID:", routingTx.id, "Length:", routingTx.id?.length);
 
           // Try to store in database (optional - don't fail if DB unavailable)
-          let dbPersisted = false;
           try {
             const { storeRoutingTransactionId } = await import("./_core/transactionMonitor");
-            // Store mapping: userTxRef -> internal routing ID
             await storeRoutingTransactionId(userTxRef, routingTx.id);
             
-            // Try to create transaction record
             const placeholderWallet = await db.getWalletByPublicKey("DEPOSIT_PLACEHOLDER");
             const walletId = placeholderWallet?.id || (await db.upsertWallet("DEPOSIT_PLACEHOLDER").catch(() => 1));
             
             await db.createTransaction({
               walletId: typeof walletId === 'number' ? walletId : 1,
               type: "transfer",
-              amount: String(amount * solana.LAMPORTS_PER_SOL),
-              amountSol: String(amount),
-              recipientPublicKey: payload.recipientPublicKey,
+              amount: String(amount),
+              amountSol: String(amount), // Legacy field, now holds any currency amount
+              recipientPublicKey: payload.recipientAddress,
               txSignature: userTxRef,
               payinAddress: routingTx.payinAddress,
               status: "pending",
             });
-            dbPersisted = true;
             console.log("[Transfer] Transaction saved to database");
           } catch (dbError) {
-            // Database unavailable - transaction still works
             console.warn("[Transfer] Database unavailable, transaction created but not persisted");
           }
 
-          // Return success with sanitized data (no internal IDs exposed)
+          // Return success with sanitized data
           return {
             success: true,
             txSignature: userTxRef,
             payinAddress: routingTx.payinAddress,
-            routingTransactionId: routingTx.id, // Needed internally for status polling
-            amountSol: amount,
-            recipientAddress: payload.recipientPublicKey,
+            routingTransactionId: routingTx.id,
+            amount: amount,
+            currency: currencyConfig.symbol,
+            network: network,
+            recipientAddress: payload.recipientAddress,
           };
         } catch (error) {
           if (error instanceof TRPCError) {

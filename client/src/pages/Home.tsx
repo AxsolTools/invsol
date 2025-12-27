@@ -1,10 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { trpc } from "@/lib/trpc";
 import { COMMUNITY_URL, APP_LOGO } from "@/const";
 
@@ -37,6 +44,33 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<"transfer" | "history" | "about">("about");
   const [transferRecipient, setTransferRecipient] = useState("");
   const [transferAmount, setTransferAmount] = useState("");
+  const [selectedCurrency, setSelectedCurrency] = useState("sol");
+  const [selectedNetwork, setSelectedNetwork] = useState("sol");
+
+  // Fetch supported currencies
+  const { data: currencies } = trpc.transaction.getSupportedCurrencies.useQuery();
+  
+  // Get the current currency config
+  const currentCurrency = useMemo(() => {
+    return currencies?.find(c => c.ticker === selectedCurrency);
+  }, [currencies, selectedCurrency]);
+
+  // Get available networks for current currency
+  const availableNetworks = useMemo(() => {
+    return currentCurrency?.networks || [];
+  }, [currentCurrency]);
+
+  // When currency changes, reset to default network
+  useEffect(() => {
+    if (currentCurrency) {
+      setSelectedNetwork(currentCurrency.defaultNetwork);
+    }
+  }, [currentCurrency]);
+
+  // Get current network config for placeholder
+  const currentNetwork = useMemo(() => {
+    return availableNetworks.find(n => n.id === selectedNetwork);
+  }, [availableNetworks, selectedNetwork]);
 
   const handleLogoClick = () => {
     setLocation("/");
@@ -44,7 +78,7 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Estimate fees when amount changes (with debouncing)
+  // Estimate fees when amount/currency/network changes (with debouncing)
   const [debouncedAmount, setDebouncedAmount] = useState("");
   
   useEffect(() => {
@@ -56,7 +90,11 @@ export default function Home() {
   }, [transferAmount]);
 
   const { data: feeEstimate, isLoading: isEstimatingFees } = trpc.transaction.estimateFees.useQuery(
-    { amountSol: debouncedAmount },
+    { 
+      amount: debouncedAmount,
+      currency: selectedCurrency,
+      network: selectedNetwork,
+    },
     {
       enabled: !!debouncedAmount && parseFloat(debouncedAmount) > 0 && !isNaN(parseFloat(debouncedAmount)),
       refetchOnWindowFocus: false,
@@ -67,6 +105,9 @@ export default function Home() {
     txSignature: string;
     payinAddress?: string;
     routingTransactionId?: string;
+    amount?: number;
+    currency?: string;
+    network?: string;
   } | null>(null);
 
   const transferMutation = trpc.transaction.transfer.useMutation({
@@ -75,8 +116,11 @@ export default function Home() {
         txSignature: data.txSignature,
         payinAddress: data.payinAddress,
         routingTransactionId: data.routingTransactionId,
+        amount: data.amount,
+        currency: data.currency,
+        network: data.network,
       });
-      toast.success("Transaction created! Please send SOL to complete the transfer.");
+      toast.success(`Transaction created! Please send ${data.currency} to complete the transfer.`);
     },
     onError: (error) => {
       toast.error(error.message || "Failed to create transaction");
@@ -119,6 +163,12 @@ export default function Home() {
       return;
     }
 
+    // Check minimum amount
+    if (currentCurrency && amount < currentCurrency.minAmount) {
+      toast.error(`Minimum amount is ${currentCurrency.minAmount} ${currentCurrency.symbol}`);
+      return;
+    }
+
     // Ensure amount is a valid string representation
     const amountStr = amount.toString();
     if (!amountStr || amountStr === "NaN" || amountStr === "Infinity") {
@@ -128,8 +178,10 @@ export default function Home() {
 
     // Submit transfer transaction to backend
     transferMutation.mutate({
-      recipientPublicKey: transferRecipient.trim(),
-      amountSol: amountStr,
+      recipientAddress: transferRecipient.trim(),
+      amount: amountStr,
+      currency: selectedCurrency,
+      network: selectedNetwork,
     });
   };
 
@@ -404,7 +456,7 @@ export default function Home() {
                             </h3>
                             <div className="w-20 h-1 bg-primary mb-6"></div>
                             <p className="text-lg text-gray-300 leading-relaxed">
-                              Navigate to the "Transfer" tab and enter the recipient's Solana wallet address and the amount of SOL you want to send privately.
+                              Navigate to the "Transfer" tab, select your currency, and enter the recipient's wallet address and the amount you want to send privately.
                             </p>
                           </div>
                         </div>
@@ -468,7 +520,7 @@ export default function Home() {
                             </h3>
                             <div className="w-20 h-1 bg-primary mb-6"></div>
                             <p className="text-lg text-gray-300 leading-relaxed">
-                              Click "Send Privately" to initiate the transaction. Your SOL will be routed through our secure exchange infrastructure, ensuring complete privacy.
+                              Click "Create Transaction" to initiate. Your crypto will be routed through our secure exchange infrastructure, ensuring complete privacy.
                             </p>
                           </div>
                         </div>
@@ -499,7 +551,7 @@ export default function Home() {
                           </h3>
                           <div className="w-32 h-1 bg-primary mx-auto mb-6"></div>
                           <p className="text-lg text-gray-300 leading-relaxed">
-                            Once processed, you'll receive confirmation. The recipient receives SOL with no traceable connection to your original transaction.
+                            Once processed, you'll receive confirmation. The recipient receives funds with no traceable connection to your original transaction.
                           </p>
                         </div>
                       </div>
@@ -529,8 +581,7 @@ export default function Home() {
                   <p className="text-lg leading-relaxed">
                     NULLROUTE solves this problem by giving you the choice to keep your transactions private. Whether you're a business 
                     protecting sensitive financial operations, an individual maintaining personal privacy, or a trader avoiding front-running 
-                    attacks, private transactions ensure your financial activity remains confidential while still benefiting from Solana's 
-                    speed and low costs.
+                    attacks, private transactions ensure your financial activity remains confidential across multiple blockchains.
                   </p>
                   <p className="text-lg leading-relaxed">
                     Privacy is not about hiding illegal activity - it's about maintaining the same level of financial confidentiality that 
@@ -543,13 +594,13 @@ export default function Home() {
             {/* Technical Details - Modern Layout */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="crypto-card rounded-xl p-8 space-y-4 border-2 border-transparent">
-                <h3 className="text-2xl font-bold text-white">Network & Fees</h3>
+                <h3 className="text-2xl font-bold text-white">Supported Assets</h3>
                 <div className="space-y-4 text-gray-400">
                   <p>
-                    <strong className="text-white">Network:</strong> NULLROUTE operates on Solana, providing fast and low-cost transactions.
+                    <strong className="text-white">Multi-Chain:</strong> NULLROUTE supports SOL, BTC, ETH, BNB, XRP, USDT, and USDC across multiple networks.
                   </p>
                   <p>
-                    <strong className="text-white">Transaction Fees:</strong> Minimal fees that are significantly lower than Ethereum-based solutions.
+                    <strong className="text-white">Transaction Fees:</strong> Competitive fees that vary by network and are shown before each transaction.
                   </p>
                 </div>
               </div>
@@ -570,7 +621,7 @@ export default function Home() {
             {/* Get Started CTA */}
             <div className="text-center py-16">
               <p className="text-xl text-gray-400 mb-8">
-                Ready to start making private transactions on Solana?
+                Ready to start making private transactions?
               </p>
               <button
                 onClick={() => setActiveTab("transfer")}
@@ -582,7 +633,7 @@ export default function Home() {
 
             {/* Footer */}
             <div className="text-center text-sm text-gray-500 pt-8 border-t border-[#333333]">
-              <p className="text-white font-semibold">Powered by NULLROUTE on Solana</p>
+              <p className="text-white font-semibold">Powered by NULLROUTE</p>
               <p className="mt-2">
                 <a href={COMMUNITY_URL} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors text-primary">
                   Join Community
@@ -599,26 +650,82 @@ export default function Home() {
             <div className="crypto-card rounded-xl p-10 border-2 border-transparent">
               <div className="mb-8 text-center">
                 <h3 className="text-3xl font-bold mb-3 text-white">Private Transfer</h3>
-                <p className="text-gray-400">Send SOL privately using secure exchange infrastructure</p>
+                <p className="text-gray-400">Send crypto privately using secure exchange infrastructure</p>
               </div>
               <div className="space-y-6">
+                {/* Currency Selection */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-semibold mb-2 block text-white">Currency</Label>
+                    <Select value={selectedCurrency} onValueChange={setSelectedCurrency}>
+                      <SelectTrigger className="w-full bg-[#1a1a1a] border-[#333333] text-white h-12 focus:border-primary">
+                        <SelectValue placeholder="Select currency" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#1a1a1a] border-[#333333]">
+                        {currencies?.map((currency) => (
+                          <SelectItem
+                            key={currency.ticker}
+                            value={currency.ticker}
+                            className="text-white hover:bg-[#333333] focus:bg-[#333333]"
+                          >
+                            <span className="flex items-center gap-2">
+                              <span className="font-bold">{currency.symbol}</span>
+                              <span className="text-gray-400">{currency.name}</span>
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-semibold mb-2 block text-white">Network</Label>
+                    <Select 
+                      value={selectedNetwork} 
+                      onValueChange={setSelectedNetwork}
+                      disabled={availableNetworks.length <= 1}
+                    >
+                      <SelectTrigger className="w-full bg-[#1a1a1a] border-[#333333] text-white h-12 focus:border-primary disabled:opacity-70">
+                        <SelectValue placeholder="Select network" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#1a1a1a] border-[#333333]">
+                        {availableNetworks.map((network) => (
+                          <SelectItem
+                            key={network.id}
+                            value={network.id}
+                            className="text-white hover:bg-[#333333] focus:bg-[#333333]"
+                          >
+                            {network.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
                 <div>
                   <Label htmlFor="transfer-recipient" className="text-sm font-semibold mb-2 block text-white">Recipient Address</Label>
                   <Input
                     id="transfer-recipient"
                     type="text"
-                    placeholder="Solana address..."
+                    placeholder={currentNetwork?.addressPlaceholder || "Enter address..."}
                     value={transferRecipient}
                     onChange={(e) => setTransferRecipient(e.target.value)}
                     className="bg-[#1a1a1a] border-[#333333] text-white font-mono text-sm h-12 focus:border-primary"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="transfer-amount" className="text-sm font-semibold mb-2 block text-white">Amount (SOL)</Label>
+                  <Label htmlFor="transfer-amount" className="text-sm font-semibold mb-2 block text-white">
+                    Amount ({currentCurrency?.symbol || "SOL"})
+                    {currentCurrency && (
+                      <span className="text-gray-500 font-normal ml-2">
+                        Min: {currentCurrency.minAmount} {currentCurrency.symbol}
+                      </span>
+                    )}
+                  </Label>
                   <Input
                     id="transfer-amount"
                     type="number"
-                    step="0.01"
+                    step="0.000001"
                     placeholder="0.00"
                     value={transferAmount}
                     onChange={(e) => setTransferAmount(e.target.value)}
@@ -629,13 +736,17 @@ export default function Home() {
                 {/* Fee Estimation Display */}
                 {transferAmount && parseFloat(transferAmount) > 0 && !isNaN(parseFloat(transferAmount)) && (
                   <div className="rounded-lg bg-[#1a1a1a] border border-[#333333] p-5 space-y-3">
+                    {/* Show error if below minimum */}
+                    {feeEstimate && 'error' in feeEstimate && feeEstimate.error && (
+                      <div className="text-red-500 text-sm font-semibold">{feeEstimate.error}</div>
+                    )}
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-400">Transaction Fee:</span>
                       {isEstimatingFees ? (
                         <span className="shimmer inline-block w-20 h-4 rounded"></span>
                       ) : feeEstimate && typeof feeEstimate.feeAmount === 'number' && typeof feeEstimate.feePercentage === 'number' ? (
                         <span className="font-semibold text-white">
-                          {Number(feeEstimate.feeAmount).toFixed(6)} SOL ({Number(feeEstimate.feePercentage).toFixed(2)}%)
+                          {Number(feeEstimate.feeAmount).toFixed(6)} {currentCurrency?.symbol || "SOL"} ({Number(feeEstimate.feePercentage).toFixed(2)}%)
                         </span>
                       ) : (
                         <span className="text-gray-500">Calculating...</span>
@@ -644,7 +755,7 @@ export default function Home() {
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-400">You Send:</span>
                       <span className="font-bold text-white">
-                        {Number(parseFloat(transferAmount || "0") || 0).toFixed(6)} SOL
+                        {Number(parseFloat(transferAmount || "0") || 0).toFixed(6)} {currentCurrency?.symbol || "SOL"}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm border-t border-[#333333] pt-3">
@@ -653,7 +764,7 @@ export default function Home() {
                         <span className="shimmer inline-block w-20 h-4 rounded"></span>
                       ) : feeEstimate && typeof feeEstimate.receiveAmount === 'number' ? (
                         <span className="font-bold text-primary">
-                          {Number(feeEstimate.receiveAmount).toFixed(6)} SOL
+                          {Number(feeEstimate.receiveAmount).toFixed(6)} {currentCurrency?.symbol || "SOL"}
                         </span>
                       ) : (
                         <span className="text-gray-500">Calculating...</span>
@@ -689,7 +800,7 @@ export default function Home() {
                           <h4 className="font-bold text-white mb-2 text-lg">Transaction Created Successfully</h4>
                           <p className="text-sm text-gray-400 mb-4">
                             To complete your private transfer, send <strong className="text-white">
-                              {Number(parseFloat(transferAmount || "0") || 0).toFixed(6)} SOL
+                              {transactionResult.amount?.toFixed(6) || Number(parseFloat(transferAmount || "0") || 0).toFixed(6)} {transactionResult.currency || currentCurrency?.symbol || "SOL"}
                             </strong> to the address below:
                           </p>
                         </div>
@@ -748,7 +859,7 @@ export default function Home() {
                         })()}
                         
                         <div className="bg-[#1a1a1a] rounded-lg p-4 border border-[#333333]">
-                          <Label className="text-xs text-gray-400 mb-2 block">Send SOL to this address:</Label>
+                          <Label className="text-xs text-gray-400 mb-2 block">Send {transactionResult.currency || currentCurrency?.symbol || "SOL"} to this address:</Label>
                           <div className="flex items-center space-x-2">
                             <code className="flex-1 font-mono text-sm bg-[#0a0a0a] text-white p-3 rounded break-all border border-[#333333]">
                               {transactionResult.payinAddress}
