@@ -286,6 +286,8 @@ export const appRouter = router({
           amount: z.string(),
           currency: z.string().default("sol"),
           network: z.string().default("sol"),
+          toCurrency: z.string().optional(), // For cross-chain swaps
+          toNetwork: z.string().optional(),
         })
       )
       .query(async ({ input }) => {
@@ -298,7 +300,7 @@ export const appRouter = router({
             });
           }
 
-          // Validate currency exists
+          // Validate from currency exists
           const currencyConfig = getCurrency(input.currency);
           if (!currencyConfig) {
             throw new TRPCError({
@@ -307,7 +309,7 @@ export const appRouter = router({
             });
           }
 
-          // Validate network exists for this currency
+          // Validate from network exists for this currency
           const networkConfig = getNetwork(input.currency, input.network);
           if (!networkConfig) {
             throw new TRPCError({
@@ -316,14 +318,30 @@ export const appRouter = router({
             });
           }
 
-          // Direct ChangeNow estimate call with selected currency/network
-          // ChangeNow API requires lowercase currency tickers and network names
+          // Determine to currency/network (defaults to same as from for privacy mode)
+          const toCurrency = input.toCurrency || input.currency;
+          const toNetwork = input.toNetwork || input.network;
+
+          // Validate to currency if different from from currency
+          let toCurrencyConfig = currencyConfig;
+          if (toCurrency !== input.currency) {
+            const foundToCurrency = getCurrency(toCurrency);
+            if (!foundToCurrency) {
+              throw new TRPCError({
+                code: "BAD_REQUEST",
+                message: `Unsupported to currency: ${toCurrency}`,
+              });
+            }
+            toCurrencyConfig = foundToCurrency;
+          }
+
+          // Exchange API estimate with selected currency/network
           const { estimateTransactionFees } = await import("./_core/changenow");
           const feeEstimate = await estimateTransactionFees(
             input.currency.toLowerCase(),
-            input.currency.toLowerCase(), // Same currency for privacy
+            toCurrency.toLowerCase(),
             input.network.toLowerCase(),
-            input.network.toLowerCase(),
+            toNetwork.toLowerCase(),
             amount
           );
 
@@ -334,6 +352,8 @@ export const appRouter = router({
             feePercentage: Number(feeEstimate.feePercentage ?? 0),
             isValid: !!feeEstimate.isValid,
             currency: currencyConfig.symbol,
+            toCurrency: toCurrencyConfig.symbol,
+            transactionSpeedForecast: feeEstimate.transactionSpeedForecast,
           };
         } catch (error) {
           if (error instanceof TRPCError) throw error;
@@ -344,7 +364,21 @@ export const appRouter = router({
         }
       }),
 
+    // Validate address via exchange API (more accurate than local regex)
+    validateAddress: publicProcedure
+      .input(
+        z.object({
+          currency: z.string(),
+          address: z.string(),
+        })
+      )
+      .query(async ({ input }) => {
+        const { validateAddress } = await import("./_core/changenow");
+        return validateAddress(input.currency, input.address);
+      }),
+
     // Create transfer - user sends crypto to deposit wallet via exchange routing
+    // Supports both privacy mode (same currency) and cross-chain swaps
     transfer: publicProcedure
       .input(
         z
@@ -353,6 +387,8 @@ export const appRouter = router({
             amount: z.string(),
             currency: z.string().default("sol"),
             network: z.string().default("sol"),
+            toCurrency: z.string().optional(), // For cross-chain swaps
+            toNetwork: z.string().optional(),
           })
           .nullish()
       )
@@ -371,33 +407,50 @@ export const appRouter = router({
             });
           }
 
-          // Get currency/network with defaults
-          const currency = (payload.currency || "sol").toLowerCase();
-          const network = (payload.network || currency).toLowerCase();
+          // Get from currency/network with defaults
+          const fromCurrency = (payload.currency || "sol").toLowerCase();
+          const fromNetwork = (payload.network || fromCurrency).toLowerCase();
 
-          // Validate currency exists
-          const currencyConfig = getCurrency(currency);
-          if (!currencyConfig) {
+          // Get to currency/network (defaults to same for privacy mode)
+          const toCurrency = (payload.toCurrency || fromCurrency).toLowerCase();
+          const toNetwork = (payload.toNetwork || toCurrency).toLowerCase();
+
+          // Validate from currency exists
+          const fromCurrencyConfig = getCurrency(fromCurrency);
+          if (!fromCurrencyConfig) {
             throw new TRPCError({
               code: "BAD_REQUEST",
-              message: `Unsupported currency: ${currency}`,
+              message: `Unsupported currency: ${fromCurrency}`,
             });
           }
 
-          // Validate network exists for this currency
-          const networkConfig = getNetwork(currency, network);
-          if (!networkConfig) {
+          // Validate from network exists
+          const fromNetworkConfig = getNetwork(fromCurrency, fromNetwork);
+          if (!fromNetworkConfig) {
             throw new TRPCError({
               code: "BAD_REQUEST",
-              message: `Unsupported network ${network} for ${currencyConfig.symbol}`,
+              message: `Unsupported network ${fromNetwork} for ${fromCurrencyConfig.symbol}`,
             });
           }
 
-          // Validate recipient address format based on network
-          if (!isValidAddress(payload.recipientAddress, network)) {
+          // Validate to currency if different
+          let toCurrencyConfig = fromCurrencyConfig;
+          if (toCurrency !== fromCurrency) {
+            const foundToCurrency = getCurrency(toCurrency);
+            if (!foundToCurrency) {
+              throw new TRPCError({
+                code: "BAD_REQUEST",
+                message: `Unsupported to currency: ${toCurrency}`,
+              });
+            }
+            toCurrencyConfig = foundToCurrency;
+          }
+
+          // Validate recipient address format based on TO network (destination)
+          if (!isValidAddress(payload.recipientAddress, toNetwork)) {
             throw new TRPCError({
               code: "BAD_REQUEST",
-              message: getAddressValidationError(network),
+              message: getAddressValidationError(toNetwork),
             });
           }
 
@@ -409,14 +462,18 @@ export const appRouter = router({
             });
           }
 
-          // Create private routing transaction via exchange API
-          console.log(`[Transfer] Creating transaction: ${amount} ${currencyConfig.symbol} on ${network}`);
+          // Determine if this is privacy mode or cross-chain swap
+          const isPrivacyMode = fromCurrency === toCurrency;
+          const txType = isPrivacyMode ? "privacy transfer" : `swap ${fromCurrencyConfig.symbol} → ${toCurrencyConfig.symbol}`;
+          
+          // Create transaction via exchange API
+          console.log(`[Transfer] Creating ${txType}: ${amount} ${fromCurrencyConfig.symbol} on ${fromNetwork}`);
           const { queueCreateTransaction } = await import("./_core/apiQueue");
           const routingTx: any = await queueCreateTransaction({
-            fromCurrency: currency,
-            toCurrency: currency, // Same currency for privacy
-            fromNetwork: network,
-            toNetwork: network,
+            fromCurrency: fromCurrency,
+            toCurrency: toCurrency,
+            fromNetwork: fromNetwork,
+            toNetwork: toNetwork,
             fromAmount: amount,
             address: payload.recipientAddress.trim(),
             flow: "standard",
@@ -439,9 +496,9 @@ export const appRouter = router({
             
             await db.createTransaction({
               walletId: typeof walletId === 'number' ? walletId : 1,
-              type: "transfer",
+              type: "transfer", // Both privacy and swap use transfer type
               amount: String(amount),
-              amountSol: String(amount), // Legacy field, now holds any currency amount
+              amountSol: String(amount), // Legacy field
               recipientPublicKey: payload.recipientAddress,
               txSignature: userTxRef,
               payinAddress: routingTx.payinAddress,
@@ -459,9 +516,12 @@ export const appRouter = router({
             payinAddress: routingTx.payinAddress,
             routingTransactionId: routingTx.id,
             amount: amount,
-            currency: currencyConfig.symbol,
-            network: network,
+            currency: fromCurrencyConfig.symbol,
+            toCurrency: toCurrencyConfig.symbol,
+            network: fromNetwork,
+            toNetwork: toNetwork,
             recipientAddress: payload.recipientAddress,
+            isSwap: !isPrivacyMode,
           };
         } catch (error) {
           if (error instanceof TRPCError) {

@@ -351,6 +351,8 @@ export async function estimateTransactionFees(
   feeAmount: number;
   feePercentage: number;
   isValid: boolean;
+  transactionSpeedForecast?: string;
+  toCurrency: string;
 }> {
   const apiKey = process.env.CHANGENOW_API_KEY;
   if (!apiKey || typeof apiKey !== 'string' || apiKey.trim() === "") {
@@ -388,6 +390,8 @@ export async function estimateTransactionFees(
       feeAmount: Math.max(0, feeAmount), // Ensure non-negative
       feePercentage: Math.max(0, feePercentage),
       isValid: receiveAmount > 0 && sendAmount > 0,
+      transactionSpeedForecast: (rateInfo as any).transactionSpeedForecast,
+      toCurrency: toCurrency.toUpperCase(),
     };
   } catch (error) {
     if (error instanceof Error) {
@@ -397,6 +401,46 @@ export async function estimateTransactionFees(
       throw new Error(`Failed to estimate fees: ${error.message}`);
     }
     throw new Error("Failed to estimate transaction fees");
+  }
+}
+
+/**
+ * Validate an address via the exchange API
+ * More accurate than local regex validation
+ */
+export async function validateAddress(
+  currency: string,
+  address: string
+): Promise<{ result: boolean; message?: string }> {
+  const apiKey = process.env.CHANGENOW_API_KEY;
+  if (!apiKey || typeof apiKey !== 'string' || apiKey.trim() === "") {
+    throw new Error("API key is not configured");
+  }
+
+  const url = `https://api.changenow.io/v2/validate/address?currency=${currency.toLowerCase()}&address=${encodeURIComponent(address)}`;
+
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "x-changenow-api-key": apiKey,
+      },
+    });
+
+    if (!response.ok) {
+      // If API fails, return false but don't crash
+      return { result: false, message: "Address validation unavailable" };
+    }
+
+    const data = await response.json();
+    return {
+      result: data.result === true,
+      message: data.message,
+    };
+  } catch (error) {
+    // Graceful fallback - allow the transaction to proceed
+    console.warn("[validateAddress] API validation failed, allowing:", error);
+    return { result: true, message: "Validation skipped" };
   }
 }
 

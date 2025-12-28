@@ -12,8 +12,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { trpc } from "@/lib/trpc";
 import { COMMUNITY_URL, APP_LOGO } from "@/const";
+import { QRCodeSVG } from "qrcode.react";
 
 // Map internal status to user-friendly status and progress (generic labels only)
 function getStatusDisplay(status?: string): { label: string; progress: number; color: string } {
@@ -46,21 +48,36 @@ export default function Home() {
   const [transferAmount, setTransferAmount] = useState("");
   const [selectedCurrency, setSelectedCurrency] = useState("sol");
   const [selectedNetwork, setSelectedNetwork] = useState("sol");
+  
+  // Cross-chain swap mode
+  const [isSwapMode, setIsSwapMode] = useState(false);
+  const [selectedToCurrency, setSelectedToCurrency] = useState("sol");
+  const [selectedToNetwork, setSelectedToNetwork] = useState("sol");
 
   // Fetch supported currencies
   const { data: currencies } = trpc.transaction.getSupportedCurrencies.useQuery();
   
-  // Get the current currency config
+  // Get the current FROM currency config
   const currentCurrency = useMemo(() => {
     return currencies?.find(c => c.ticker === selectedCurrency);
   }, [currencies, selectedCurrency]);
 
-  // Get available networks for current currency
+  // Get available networks for FROM currency
   const availableNetworks = useMemo(() => {
     return currentCurrency?.networks || [];
   }, [currentCurrency]);
 
-  // When currency changes, reset to default network immediately
+  // Get the current TO currency config (for swaps)
+  const toCurrencyConfig = useMemo(() => {
+    return currencies?.find(c => c.ticker === selectedToCurrency);
+  }, [currencies, selectedToCurrency]);
+
+  // Get available networks for TO currency
+  const availableToNetworks = useMemo(() => {
+    return toCurrencyConfig?.networks || [];
+  }, [toCurrencyConfig]);
+
+  // When FROM currency changes, reset to default network immediately
   useEffect(() => {
     if (currencies) {
       const currency = currencies.find(c => c.ticker === selectedCurrency);
@@ -70,10 +87,25 @@ export default function Home() {
     }
   }, [selectedCurrency, currencies]);
 
-  // Get current network config for placeholder
+  // When TO currency changes, reset to default TO network
+  useEffect(() => {
+    if (currencies) {
+      const currency = currencies.find(c => c.ticker === selectedToCurrency);
+      if (currency) {
+        setSelectedToNetwork(currency.defaultNetwork);
+      }
+    }
+  }, [selectedToCurrency, currencies]);
+
+  // Get current FROM network config for placeholder
   const currentNetwork = useMemo(() => {
     return availableNetworks.find(n => n.id === selectedNetwork);
   }, [availableNetworks, selectedNetwork]);
+
+  // Get current TO network config for placeholder
+  const currentToNetwork = useMemo(() => {
+    return availableToNetworks.find(n => n.id === selectedToNetwork);
+  }, [availableToNetworks, selectedToNetwork]);
 
   const handleLogoClick = () => {
     setLocation("/");
@@ -92,19 +124,26 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [transferAmount]);
 
-  // Check if network is valid for current currency before querying
+  // Check if networks are valid before querying
   const isNetworkValid = useMemo(() => {
     return availableNetworks.some(n => n.id === selectedNetwork);
   }, [availableNetworks, selectedNetwork]);
+
+  const isToNetworkValid = useMemo(() => {
+    if (!isSwapMode) return true;
+    return availableToNetworks.some(n => n.id === selectedToNetwork);
+  }, [isSwapMode, availableToNetworks, selectedToNetwork]);
 
   const { data: feeEstimate, isLoading: isEstimatingFees } = trpc.transaction.estimateFees.useQuery(
     { 
       amount: debouncedAmount,
       currency: selectedCurrency,
       network: selectedNetwork,
+      toCurrency: isSwapMode ? selectedToCurrency : undefined,
+      toNetwork: isSwapMode ? selectedToNetwork : undefined,
     },
     {
-      enabled: !!debouncedAmount && parseFloat(debouncedAmount) > 0 && !isNaN(parseFloat(debouncedAmount)) && isNetworkValid,
+      enabled: !!debouncedAmount && parseFloat(debouncedAmount) > 0 && !isNaN(parseFloat(debouncedAmount)) && isNetworkValid && isToNetworkValid,
       refetchOnWindowFocus: false,
     }
   );
@@ -115,7 +154,10 @@ export default function Home() {
     routingTransactionId?: string;
     amount?: number;
     currency?: string;
+    toCurrency?: string;
     network?: string;
+    toNetwork?: string;
+    isSwap?: boolean;
   } | null>(null);
 
   const transferMutation = trpc.transaction.transfer.useMutation({
@@ -126,9 +168,15 @@ export default function Home() {
         routingTransactionId: data.routingTransactionId,
         amount: data.amount,
         currency: data.currency,
+        toCurrency: data.toCurrency,
         network: data.network,
+        toNetwork: data.toNetwork,
+        isSwap: data.isSwap,
       });
-      toast.success(`Transaction created! Please send ${data.currency} to complete the transfer.`);
+      const actionText = data.isSwap 
+        ? `Swap created! Send ${data.currency} to receive ${data.toCurrency}.`
+        : `Transaction created! Please send ${data.currency} to complete the transfer.`;
+      toast.success(actionText);
     },
     onError: (error) => {
       toast.error(error.message || "Failed to create transaction");
@@ -184,6 +232,8 @@ export default function Home() {
       amount: amountStr,
       currency: selectedCurrency,
       network: selectedNetwork,
+      toCurrency: isSwapMode ? selectedToCurrency : undefined,
+      toNetwork: isSwapMode ? selectedToNetwork : undefined,
     });
   };
 
@@ -655,61 +705,133 @@ export default function Home() {
                 <p className="text-gray-400">Send crypto privately using secure exchange infrastructure</p>
               </div>
               <div className="space-y-6">
-                {/* Currency Selection */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-sm font-semibold mb-2 block text-white">Currency</Label>
-                    <Select value={selectedCurrency} onValueChange={setSelectedCurrency}>
-                      <SelectTrigger className="w-full bg-[#1a1a1a] border-[#333333] text-white h-12 focus:border-primary">
-                        <SelectValue placeholder="Select currency" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-[#1a1a1a] border-[#333333]">
-                        {currencies?.map((currency) => (
-                          <SelectItem
-                            key={currency.ticker}
-                            value={currency.ticker}
-                            className="text-white hover:bg-[#333333] focus:bg-[#333333]"
-                          >
-                            <span className="flex items-center gap-2">
-                              <span className="font-bold">{currency.symbol}</span>
-                              <span className="text-gray-400">{currency.name}</span>
-                            </span>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                {/* Mode Toggle */}
+                <div className="flex items-center justify-between p-4 rounded-lg bg-[#1a1a1a] border border-[#333333]">
+                  <div className="space-y-1">
+                    <Label className="text-sm font-semibold text-white">Cross-Chain Swap</Label>
+                    <p className="text-xs text-gray-400">
+                      {isSwapMode ? "Send one currency, receive another" : "Private same-currency transfer"}
+                    </p>
                   </div>
-                  <div>
-                    <Label className="text-sm font-semibold mb-2 block text-white">Network</Label>
-                    <Select 
-                      value={selectedNetwork} 
-                      onValueChange={setSelectedNetwork}
-                      disabled={availableNetworks.length <= 1}
-                    >
-                      <SelectTrigger className="w-full bg-[#1a1a1a] border-[#333333] text-white h-12 focus:border-primary disabled:opacity-70">
-                        <SelectValue placeholder="Select network" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-[#1a1a1a] border-[#333333]">
-                        {availableNetworks.map((network) => (
-                          <SelectItem
-                            key={network.id}
-                            value={network.id}
-                            className="text-white hover:bg-[#333333] focus:bg-[#333333]"
-                          >
-                            {network.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  <Switch
+                    checked={isSwapMode}
+                    onCheckedChange={setIsSwapMode}
+                    className="data-[state=checked]:bg-primary"
+                  />
+                </div>
+
+                {/* FROM Currency Selection */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-semibold text-white">
+                    {isSwapMode ? "You Send" : "Currency"}
+                  </Label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Select value={selectedCurrency} onValueChange={setSelectedCurrency}>
+                        <SelectTrigger className="w-full bg-[#1a1a1a] border-[#333333] text-white h-12 focus:border-primary">
+                          <SelectValue placeholder="Select currency" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#1a1a1a] border-[#333333]">
+                          {currencies?.map((currency) => (
+                            <SelectItem
+                              key={currency.ticker}
+                              value={currency.ticker}
+                              className="text-white hover:bg-[#333333] focus:bg-[#333333]"
+                            >
+                              <span className="flex items-center gap-2">
+                                <span className="font-bold">{currency.symbol}</span>
+                                <span className="text-gray-400">{currency.name}</span>
+                              </span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Select 
+                        value={selectedNetwork} 
+                        onValueChange={setSelectedNetwork}
+                        disabled={availableNetworks.length <= 1}
+                      >
+                        <SelectTrigger className="w-full bg-[#1a1a1a] border-[#333333] text-white h-12 focus:border-primary disabled:opacity-70">
+                          <SelectValue placeholder="Select network" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#1a1a1a] border-[#333333]">
+                          {availableNetworks.map((network) => (
+                            <SelectItem
+                              key={network.id}
+                              value={network.id}
+                              className="text-white hover:bg-[#333333] focus:bg-[#333333]"
+                            >
+                              {network.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </div>
 
+                {/* TO Currency Selection (only visible in swap mode) */}
+                {isSwapMode && (
+                  <div className="space-y-3">
+                    <Label className="text-sm font-semibold text-white">You Receive</Label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Select value={selectedToCurrency} onValueChange={setSelectedToCurrency}>
+                          <SelectTrigger className="w-full bg-[#1a1a1a] border-[#333333] text-white h-12 focus:border-primary">
+                            <SelectValue placeholder="Select currency" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-[#1a1a1a] border-[#333333]">
+                            {currencies?.filter(c => c.ticker !== selectedCurrency).map((currency) => (
+                              <SelectItem
+                                key={currency.ticker}
+                                value={currency.ticker}
+                                className="text-white hover:bg-[#333333] focus:bg-[#333333]"
+                              >
+                                <span className="flex items-center gap-2">
+                                  <span className="font-bold">{currency.symbol}</span>
+                                  <span className="text-gray-400">{currency.name}</span>
+                                </span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Select 
+                          value={selectedToNetwork} 
+                          onValueChange={setSelectedToNetwork}
+                          disabled={availableToNetworks.length <= 1}
+                        >
+                          <SelectTrigger className="w-full bg-[#1a1a1a] border-[#333333] text-white h-12 focus:border-primary disabled:opacity-70">
+                            <SelectValue placeholder="Select network" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-[#1a1a1a] border-[#333333]">
+                            {availableToNetworks.map((network) => (
+                              <SelectItem
+                                key={network.id}
+                                value={network.id}
+                                className="text-white hover:bg-[#333333] focus:bg-[#333333]"
+                              >
+                                {network.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <div>
-                  <Label htmlFor="transfer-recipient" className="text-sm font-semibold mb-2 block text-white">Recipient Address</Label>
+                  <Label htmlFor="transfer-recipient" className="text-sm font-semibold mb-2 block text-white">
+                    Recipient Address {isSwapMode && toCurrencyConfig && `(${toCurrencyConfig.symbol})`}
+                  </Label>
                   <Input
                     id="transfer-recipient"
                     type="text"
-                    placeholder={currentNetwork?.addressPlaceholder || "Enter address..."}
+                    placeholder={isSwapMode ? (currentToNetwork?.addressPlaceholder || "Enter address...") : (currentNetwork?.addressPlaceholder || "Enter address...")}
                     value={transferRecipient}
                     onChange={(e) => setTransferRecipient(e.target.value)}
                     className="bg-[#1a1a1a] border-[#333333] text-white font-mono text-sm h-12 focus:border-primary"
@@ -757,12 +879,21 @@ export default function Home() {
                         <span className="shimmer inline-block w-20 h-4 rounded"></span>
                       ) : feeEstimate && typeof feeEstimate.receiveAmount === 'number' ? (
                         <span className="font-bold text-primary">
-                          {Number(feeEstimate.receiveAmount).toFixed(6)} {currentCurrency?.symbol || "SOL"}
+                          {Number(feeEstimate.receiveAmount).toFixed(6)} {isSwapMode ? (toCurrencyConfig?.symbol || "SOL") : (currentCurrency?.symbol || "SOL")}
                         </span>
                       ) : (
                         <span className="text-gray-500">Calculating...</span>
                       )}
                     </div>
+                    {/* Transaction Speed Forecast */}
+                    {feeEstimate && (feeEstimate as any).transactionSpeedForecast && (
+                      <div className="flex items-center justify-between text-sm border-t border-[#333333] pt-3">
+                        <span className="text-gray-400">Est. Completion:</span>
+                        <span className="font-semibold text-green-400">
+                          ~{(feeEstimate as any).transactionSpeedForecast} min
+                        </span>
+                      </div>
+                    )}
                     {feeEstimate && typeof feeEstimate.feeAmount === 'number' && Number(feeEstimate.feeAmount) > 0 && (
                       <p className="text-xs text-gray-500 pt-2 border-t border-[#333333]">
                         Fees are included in the exchange rate and cover network and processing costs.
@@ -852,7 +983,21 @@ export default function Home() {
                         })()}
                         
                         <div className="bg-[#1a1a1a] rounded-lg p-4 border border-[#333333]">
-                          <Label className="text-xs text-gray-400 mb-2 block">Send {transactionResult.currency || currentCurrency?.symbol || "SOL"} to this address:</Label>
+                          <Label className="text-xs text-gray-400 mb-2 block">
+                            Send {transactionResult.currency || currentCurrency?.symbol || "SOL"} to this address:
+                            {transactionResult.isSwap && ` → Receive ${transactionResult.toCurrency}`}
+                          </Label>
+                          {/* QR Code */}
+                          <div className="flex justify-center mb-4">
+                            <div className="bg-white p-3 rounded-lg">
+                              <QRCodeSVG 
+                                value={transactionResult.payinAddress || ""} 
+                                size={160}
+                                level="H"
+                                includeMargin={false}
+                              />
+                            </div>
+                          </div>
                           <div className="flex items-center space-x-2">
                             <code className="flex-1 font-mono text-sm bg-[#0a0a0a] text-white p-3 rounded break-all border border-[#333333]">
                               {transactionResult.payinAddress}
@@ -873,9 +1018,14 @@ export default function Home() {
                         <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
                           <p className="text-xs text-yellow-700 dark:text-yellow-400">
                             <strong>Important:</strong> Send exactly <strong>
-                              {Number(parseFloat(transferAmount || "0") || 0).toFixed(6)} SOL
+                              {transactionResult.amount?.toFixed(6) || Number(parseFloat(transferAmount || "0") || 0).toFixed(6)} {transactionResult.currency || currentCurrency?.symbol || "SOL"}
                             </strong> to this address. 
-                            The transaction will be processed automatically once the funds are received.
+                            {transactionResult.isSwap && (
+                              <span> You will receive {transactionResult.toCurrency} at the recipient address.</span>
+                            )}
+                            {!transactionResult.isSwap && (
+                              <span> The transaction will be processed automatically once the funds are received.</span>
+                            )}
                           </p>
                         </div>
                         <div className="flex items-center justify-between pt-2 border-t border-[#333333]">
@@ -897,6 +1047,31 @@ export default function Home() {
                     </div>
                   </div>
                 )}
+              </div>
+            </div>
+
+            {/* Coming Soon - Fiat Section */}
+            <div className="mt-6 crypto-card rounded-xl p-6 border-2 border-dashed border-[#333333] opacity-60">
+              <div className="text-center space-y-3">
+                <div className="inline-flex items-center px-3 py-1 rounded-full bg-primary/20 border border-primary/30">
+                  <span className="text-xs font-semibold text-primary">COMING SOON</span>
+                </div>
+                <h4 className="text-lg font-bold text-white">Fiat On/Off-Ramp</h4>
+                <p className="text-sm text-gray-400 max-w-md mx-auto">
+                  Buy crypto with USD/EUR or cash out to your bank account. 
+                  Seamless integration coming soon.
+                </p>
+                <div className="flex justify-center gap-4 text-sm text-gray-500">
+                  <span className="flex items-center gap-1">
+                    <span className="text-green-500">●</span> Buy Crypto
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="text-blue-500">●</span> Sell Crypto
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="text-yellow-500">●</span> Bank Transfer
+                  </span>
+                </div>
               </div>
             </div>
           </div>
