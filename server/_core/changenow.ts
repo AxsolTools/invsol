@@ -159,13 +159,9 @@ export async function createTransaction(
         throw new Error("Invalid response: missing or invalid deposit address");
       }
 
-      // Validate address format using Solana PublicKey (more robust)
-      try {
-        const { PublicKey } = await import("@solana/web3.js");
-        new PublicKey(data.payinAddress);
-      } catch {
-        throw new Error("Invalid deposit address format received - not a valid Solana address");
-      }
+      // Note: We don't validate the deposit address format here because
+      // it depends on the FROM currency (could be BTC, ETH, SOL, etc.)
+      // The exchange API already validates and generates valid addresses
       
       // Validate payoutAddress matches requested address
       if (!data.payoutAddress || data.payoutAddress !== params.address.trim()) {
