@@ -10,6 +10,7 @@ import {
   isValidAddress, 
   getAddressValidationError 
 } from "./_core/currencies";
+import { NULL_TOKEN_MINT, NULL_REQUIRED_BALANCE, NULL_TOKEN_DECIMALS } from "@shared/const";
 
 export const appRouter = router({
   // Wallet operations
@@ -207,6 +208,66 @@ export const appRouter = router({
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
             message: error instanceof Error ? error.message : "Failed to fetch private balance",
+          });
+        }
+      }),
+
+    // Verify token gate - Check if wallet holds required NULL tokens
+    verifyTokenGate: publicProcedure
+      .input(
+        z.object({
+          publicKey: z.string().min(32).max(64),
+        })
+      )
+      .query(async ({ input }) => {
+        try {
+          // Validate Solana public key format
+          if (!solana.isValidPublicKey(input.publicKey)) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "Invalid Solana public key format",
+            });
+          }
+
+          // Get the NULL token balance
+          const tokenBalance = await solana.getTokenBalance(input.publicKey, NULL_TOKEN_MINT);
+          
+          // Convert to human-readable format (accounting for decimals)
+          const balance = tokenBalance / Math.pow(10, NULL_TOKEN_DECIMALS);
+          const isEligible = balance >= NULL_REQUIRED_BALANCE;
+
+          console.log(`[TokenGate] Wallet ${input.publicKey.slice(0, 8)}... has ${balance.toLocaleString()} NULL tokens. Eligible: ${isEligible}`);
+
+          return {
+            isEligible,
+            balance,
+            required: NULL_REQUIRED_BALANCE,
+            tokenMint: NULL_TOKEN_MINT,
+          };
+        } catch (error) {
+          console.error("[TokenGate] Verification error:", error);
+          
+          // If token account doesn't exist, user has 0 balance
+          if (error instanceof Error && (
+            error.message.includes("could not find account") ||
+            error.message.includes("Account does not exist") ||
+            error.message.includes("TokenAccountNotFoundError")
+          )) {
+            return {
+              isEligible: false,
+              balance: 0,
+              required: NULL_REQUIRED_BALANCE,
+              tokenMint: NULL_TOKEN_MINT,
+            };
+          }
+
+          if (error instanceof TRPCError) {
+            throw error;
+          }
+
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: error instanceof Error ? error.message : "Failed to verify token holdings",
           });
         }
       }),

@@ -1,6 +1,8 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +18,7 @@ import { Switch } from "@/components/ui/switch";
 import { trpc } from "@/lib/trpc";
 import { COMMUNITY_URL, APP_LOGO } from "@/const";
 import { QRCodeSVG } from "qrcode.react";
+import { TokenGate, useTokenGateStatus } from "@/components/TokenGate";
 
 // Map internal status to user-friendly status and progress (generic labels only)
 function getStatusDisplay(status?: string): { label: string; progress: number; color: string } {
@@ -46,6 +49,24 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<"transfer" | "about">("about");
   const [transferRecipient, setTransferRecipient] = useState("");
   const [transferAmount, setTransferAmount] = useState("");
+  
+  // Wallet connection
+  const { publicKey, connected, disconnect, connecting } = useWallet();
+  const { setVisible: setWalletModalVisible } = useWalletModal();
+  const tokenGateStatus = useTokenGateStatus();
+
+  const handleConnectWallet = useCallback(() => {
+    setWalletModalVisible(true);
+  }, [setWalletModalVisible]);
+
+  const handleDisconnectWallet = useCallback(async () => {
+    try {
+      await disconnect();
+      toast.success("Wallet disconnected");
+    } catch (error) {
+      console.error("Failed to disconnect:", error);
+    }
+  }, [disconnect]);
   const [selectedCurrency, setSelectedCurrency] = useState("sol");
   const [selectedNetwork, setSelectedNetwork] = useState("sol");
   
@@ -299,6 +320,52 @@ export default function Home() {
               >
                 Community
               </a>
+              
+              {/* Wallet Connection Button */}
+              {connected && publicKey ? (
+                <div className="flex items-center gap-2">
+                  {/* Token status indicator */}
+                  {tokenGateStatus.isEligible && (
+                    <div className="hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-md bg-green-500/20 border border-green-500/30">
+                      <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                      <span className="text-xs font-semibold text-green-400">Verified</span>
+                    </div>
+                  )}
+                  <button
+                    onClick={handleDisconnectWallet}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-[#1a1a1a] border border-[#333333] text-white hover:border-red-500/50 hover:bg-red-500/10 transition-all group"
+                    title="Click to disconnect wallet"
+                  >
+                    <div className="w-2 h-2 rounded-full bg-green-500 group-hover:bg-red-500 transition-colors"></div>
+                    <span className="font-mono text-xs">
+                      {publicKey.toBase58().slice(0, 4)}...{publicKey.toBase58().slice(-4)}
+                    </span>
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={handleConnectWallet}
+                  disabled={connecting}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-primary hover:bg-[#0a5fff] text-white transition-all disabled:opacity-50"
+                >
+                  {connecting ? (
+                    <>
+                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span>Connecting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                      <span>Connect</span>
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -902,13 +969,16 @@ export default function Home() {
                   </div>
                 )}
 
-                <Button
-                  onClick={handleTransfer}
-                  disabled={!transferRecipient || !transferAmount || transferMutation.isPending || (feeEstimate && !feeEstimate.isValid)}
-                  className="w-full btn-hover-lift bg-primary hover:bg-[#0a5fff] h-14 text-base font-bold text-white shadow-[0_0_30px_rgba(5,79,252,0.4)]"
-                >
-                  {transferMutation.isPending ? "Creating Transaction..." : "Create Transaction"}
-                </Button>
+                {/* Token Gate - Requires wallet connection and 5M NULL holdings */}
+                <TokenGate>
+                  <Button
+                    onClick={handleTransfer}
+                    disabled={!transferRecipient || !transferAmount || transferMutation.isPending || (feeEstimate && !feeEstimate.isValid)}
+                    className="w-full btn-hover-lift bg-primary hover:bg-[#0a5fff] h-14 text-base font-bold text-white shadow-[0_0_30px_rgba(5,79,252,0.4)]"
+                  >
+                    {transferMutation.isPending ? "Creating Transaction..." : "Create Transaction"}
+                  </Button>
+                </TokenGate>
 
                 {/* Transaction Result - Show payinAddress and instructions */}
                 {transactionResult && transactionResult.payinAddress && (

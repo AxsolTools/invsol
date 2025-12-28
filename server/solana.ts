@@ -1,6 +1,7 @@
 import * as web3 from "@solana/web3.js";
 import * as light from "@lightprotocol/zk.js";
 import * as anchor from "@coral-xyz/anchor";
+import { getAssociatedTokenAddressSync, getAccount, TokenAccountNotFoundError } from "@solana/spl-token";
 
 /**
  * Solana and Light Protocol service
@@ -33,6 +34,31 @@ export async function getBalance(publicKey: string): Promise<number> {
   const pubKey = new web3.PublicKey(publicKey);
   const balance = await connection.getBalance(pubKey);
   return balance; // Returns balance in lamports
+}
+
+/**
+ * Get SPL token balance for a wallet
+ * Returns the raw token amount (before decimal adjustment)
+ */
+export async function getTokenBalance(walletPublicKey: string, tokenMintAddress: string): Promise<number> {
+  const connection = getSolanaConnection();
+  const walletPubKey = new web3.PublicKey(walletPublicKey);
+  const mintPubKey = new web3.PublicKey(tokenMintAddress);
+  
+  // Get the associated token account address
+  const tokenAccountAddress = getAssociatedTokenAddressSync(mintPubKey, walletPubKey);
+  
+  try {
+    // Get the token account info
+    const tokenAccount = await getAccount(connection, tokenAccountAddress);
+    return Number(tokenAccount.amount);
+  } catch (error) {
+    // If the token account doesn't exist, the wallet has 0 of this token
+    if (error instanceof TokenAccountNotFoundError) {
+      return 0;
+    }
+    throw error;
+  }
 }
 
 /**
