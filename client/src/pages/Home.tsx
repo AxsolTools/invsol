@@ -217,14 +217,26 @@ export default function Home() {
       toast.error("Valid amount required");
       return;
     }
-    transferMutation.mutate({
+    const mutationPayload: {
+      recipientAddress: string;
+      amount: string;
+      currency: string;
+      network: string;
+      toCurrency?: string;
+      toNetwork?: string;
+    } = {
       recipientAddress: transferRecipient.trim(),
       amount: amountStr,
       currency: selectedCurrency,
       network: selectedNetwork,
-      toCurrency: isSwapMode ? selectedToCurrency : undefined,
-      toNetwork: isSwapMode ? selectedToNetwork : undefined,
-    });
+    };
+
+    if (isSwapMode) {
+      mutationPayload.toCurrency = selectedToCurrency;
+      mutationPayload.toNetwork = selectedToNetwork;
+    }
+
+    transferMutation.mutate(mutationPayload);
   };
 
   return (
