@@ -245,6 +245,17 @@
     50% { background-position: 100% 50%; }
   }
 
+  /* Orbit Animation for crypto badges */
+  @keyframes orbit-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  @keyframes orbit-counter-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(-360deg); }
+  }
+
   /* Pulse Glow Animation */
   .pulse-glow {
     animation: pulse-glow 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;

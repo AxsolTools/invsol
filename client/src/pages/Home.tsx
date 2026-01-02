@@ -286,7 +286,7 @@ export default function Home() {
         {view === "home" && (
           <>
             {/* Hero Section */}
-            <section className="min-h-screen flex items-center justify-center px-6 relative">
+            <section className="min-h-screen flex items-center justify-center px-6 relative overflow-hidden">
               {/* Center glow */}
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-radial from-[#00D9FF]/10 to-transparent rounded-full blur-3xl pointer-events-none"></div>
               
@@ -299,37 +299,70 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Title */}
-                <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight mb-6" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                  <span className="text-white">INVSOL</span>
-                  <span className="text-[#00D9FF]"> BRIDGE</span>
-                </h1>
+                {/* Title with orbiting assets */}
+                <div className="relative mb-8">
+                  {/* Orbiting ring container */}
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] sm:w-[440px] sm:h-[440px] lg:w-[540px] lg:h-[540px] pointer-events-none">
+                    {/* Orbit path (visual) */}
+                    <div className="absolute inset-0 rounded-full border border-white/[0.04]"></div>
+                    <div className="absolute inset-6 rounded-full border border-dashed border-white/[0.02]"></div>
+                    
+                    {/* Orbiting assets container - spins continuously */}
+                    <div 
+                      className="absolute inset-0"
+                      style={{ animation: 'orbit-spin 25s linear infinite' }}
+                    >
+                      {[
+                        { symbol: 'BTC', color: '#F7931A' },
+                        { symbol: 'ETH', color: '#627EEA' },
+                        { symbol: 'SOL', color: '#00D9FF' },
+                        { symbol: 'BNB', color: '#F3BA2F' },
+                        { symbol: 'XRP', color: '#FFFFFF' },
+                        { symbol: 'USDT', color: '#26A17B' },
+                        { symbol: 'USDC', color: '#2775CA' },
+                      ].map((asset, index) => {
+                        const angle = (index * 360) / 7;
+                        const radians = (angle * Math.PI) / 180;
+                        // Position on circle edge
+                        const x = Math.cos(radians) * 50; // 50% of container
+                        const y = Math.sin(radians) * 50;
+                        return (
+                          <div
+                            key={asset.symbol}
+                            className="absolute"
+                            style={{
+                              top: `calc(50% + ${y}%)`,
+                              left: `calc(50% + ${x}%)`,
+                              transform: 'translate(-50%, -50%)',
+                            }}
+                          >
+                            <div 
+                              className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full bg-[#0a0a12] border border-white/[0.1] flex items-center gap-1.5 sm:gap-2 shadow-xl whitespace-nowrap"
+                              style={{ animation: 'orbit-counter-spin 25s linear infinite' }}
+                            >
+                              <div 
+                                className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full shrink-0" 
+                                style={{ backgroundColor: asset.color, boxShadow: `0 0 10px ${asset.color}` }}
+                              ></div>
+                              <span className="text-[9px] sm:text-[11px] font-bold text-white/90 tracking-wider">{asset.symbol}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Title (centered, above orbit) */}
+                  <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight relative z-10 py-20 sm:py-28" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                    <span className="text-white">INVSOL</span>
+                    <span className="text-[#00D9FF]"> BRIDGE</span>
+                  </h1>
+                </div>
 
                 {/* Tagline */}
                 <p className="text-lg sm:text-xl text-white/40 mb-12 max-w-xl mx-auto leading-relaxed">
                   The invisible bridge between blockchains. Move assets across chains with zero trace linking origin to destination.
                 </p>
-
-                {/* Supported assets */}
-                <div className="flex flex-wrap justify-center gap-2 mb-14">
-                  {[
-                    { symbol: 'BTC', color: '#F7931A' },
-                    { symbol: 'ETH', color: '#627EEA' },
-                    { symbol: 'SOL', color: '#00D9FF' },
-                    { symbol: 'BNB', color: '#F3BA2F' },
-                    { symbol: 'XRP', color: '#23292F' },
-                    { symbol: 'USDT', color: '#26A17B' },
-                    { symbol: 'USDC', color: '#2775CA' },
-                  ].map((asset) => (
-                    <div
-                      key={asset.symbol}
-                      className="px-4 py-2 rounded-full bg-white/[0.02] border border-white/[0.05] flex items-center gap-2"
-                    >
-                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: asset.color, boxShadow: `0 0 8px ${asset.color}50` }}></div>
-                      <span className="text-xs font-bold text-white/60 tracking-wider">{asset.symbol}</span>
-                    </div>
-                  ))}
-                </div>
 
                 {/* CTA */}
                 <button
