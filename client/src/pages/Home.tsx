@@ -291,14 +291,6 @@ export default function Home() {
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-radial from-[#00D9FF]/10 to-transparent rounded-full blur-3xl pointer-events-none"></div>
               
               <div className="max-w-4xl mx-auto text-center relative">
-                {/* Logo mark */}
-                <div className="mb-12 flex justify-center">
-                  <div className="relative">
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#00D9FF]/30 to-[#8B5CF6]/30 blur-3xl rounded-full scale-150"></div>
-                    <img src={APP_LOGO} alt="INVSOL" className="w-28 h-28 sm:w-36 sm:h-36 rounded-3xl relative shadow-2xl" />
-                  </div>
-                </div>
-
                 {/* Title with orbiting assets */}
                 <div className="relative mb-8">
                   {/* Orbiting ring container */}
