@@ -1,11 +1,13 @@
 export { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 
-export const APP_TITLE = import.meta.env.VITE_APP_TITLE || "App";
+export const APP_TITLE = import.meta.env.VITE_APP_TITLE || "INVSOL";
 
 export const APP_LOGO = "/logo.png";
+export const APP_NAME = "INVSOL";
+export const APP_TAGLINE = "Invisible Solutions";
 
-export const COMMUNITY_URL = "https://x.com/NullRouteOS";
-export const GITHUB_URL = "https://github.com/Lightprotocol/light-protocol";
+export const COMMUNITY_URL = "https://x.com/INVSOL_io";
+export const GITHUB_URL = "https://github.com/INVSOL";
 
 // Generate login URL at runtime so redirect URI reflects the current origin.
 export const getLoginUrl = () => {

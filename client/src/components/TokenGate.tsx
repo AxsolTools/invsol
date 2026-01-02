@@ -96,123 +96,126 @@ export const TokenGate: FC<TokenGateProps> = ({ children, onGateBlocked }) => {
 
   // Show appropriate gate UI based on state
   return (
-    <div className="rounded-xl bg-[#1a1a1a] border-2 border-primary/30 p-8 text-center space-y-6">
+    <div className="rounded-xl bg-[#0a0a0f] border border-[#00D9FF]/30 p-8 text-center space-y-6 relative overflow-hidden">
+      {/* Background glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-[#00D9FF]/5 rounded-full blur-3xl pointer-events-none"></div>
+      
       {/* Not connected state */}
       {!connected && !connecting && (
-        <>
+        <div className="relative">
           <div className="space-y-3">
-            <div className="w-16 h-16 mx-auto rounded-full bg-primary/20 flex items-center justify-center">
-              <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-16 h-16 mx-auto rounded-xl bg-gradient-to-br from-[#00D9FF]/20 to-[#8B5CF6]/20 flex items-center justify-center border border-[#00D9FF]/30">
+              <svg className="w-8 h-8 text-[#00D9FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
             </div>
-            <h3 className="text-xl font-bold text-white">Connect Your Wallet</h3>
-            <p className="text-gray-400 max-w-sm mx-auto">
-              To use the transfer feature, connect your Phantom wallet and hold at least{' '}
-              <span className="text-primary font-semibold">{NULL_REQUIRED_BALANCE.toLocaleString()} NULL</span> tokens.
+            <h3 className="text-xl font-bold text-white tracking-wide" style={{ fontFamily: "'Orbitron', sans-serif" }}>Connect Wallet</h3>
+            <p className="text-gray-400 max-w-sm mx-auto text-sm">
+              Connect your wallet and hold at least{' '}
+              <span className="text-[#00D9FF] font-semibold">{NULL_REQUIRED_BALANCE.toLocaleString()} NULL</span> tokens to access transfers.
             </p>
           </div>
           <Button
             onClick={handleConnectWallet}
-            className="btn-hover-lift bg-primary hover:bg-[#0a5fff] text-white font-bold px-8 py-3 shadow-[0_0_30px_rgba(5,79,252,0.4)]"
+            className="mt-6 btn-hover-lift bg-gradient-to-r from-[#00D9FF] to-[#0099b3] hover:from-[#00e5ff] hover:to-[#00b3cc] text-black font-bold px-8 py-3 shadow-[0_0_30px_rgba(0,217,255,0.3)] tracking-wider"
+            style={{ fontFamily: "'Orbitron', sans-serif" }}
           >
-            Connect Wallet
+            CONNECT WALLET
           </Button>
-        </>
+        </div>
       )}
 
       {/* Connecting state */}
       {connecting && (
-        <div className="space-y-3">
-          <div className="w-16 h-16 mx-auto rounded-full bg-primary/20 flex items-center justify-center animate-pulse">
-            <svg className="w-8 h-8 text-primary animate-spin" fill="none" viewBox="0 0 24 24">
+        <div className="relative space-y-3">
+          <div className="w-16 h-16 mx-auto rounded-xl bg-gradient-to-br from-[#00D9FF]/20 to-[#8B5CF6]/20 flex items-center justify-center animate-pulse border border-[#00D9FF]/30">
+            <svg className="w-8 h-8 text-[#00D9FF] animate-spin" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
           </div>
-          <h3 className="text-xl font-bold text-white">Connecting...</h3>
-          <p className="text-gray-400">Please approve the connection in your wallet.</p>
+          <h3 className="text-xl font-bold text-white tracking-wide" style={{ fontFamily: "'Orbitron', sans-serif" }}>Connecting...</h3>
+          <p className="text-gray-500 text-sm">Approve the connection in your wallet</p>
         </div>
       )}
 
       {/* Checking holdings state */}
       {connected && gateState.status === 'checking' && (
-        <div className="space-y-3">
-          <div className="w-16 h-16 mx-auto rounded-full bg-primary/20 flex items-center justify-center">
-            <svg className="w-8 h-8 text-primary animate-spin" fill="none" viewBox="0 0 24 24">
+        <div className="relative space-y-3">
+          <div className="w-16 h-16 mx-auto rounded-xl bg-gradient-to-br from-[#00D9FF]/20 to-[#8B5CF6]/20 flex items-center justify-center border border-[#00D9FF]/30">
+            <svg className="w-8 h-8 text-[#00D9FF] animate-spin" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
           </div>
-          <h3 className="text-xl font-bold text-white">Verifying Holdings...</h3>
-          <p className="text-gray-400">Checking your NULL token balance.</p>
+          <h3 className="text-xl font-bold text-white tracking-wide" style={{ fontFamily: "'Orbitron', sans-serif" }}>Verifying...</h3>
+          <p className="text-gray-500 text-sm">Checking your NULL token balance</p>
         </div>
       )}
 
       {/* Ineligible state - not enough tokens */}
       {connected && gateState.status === 'ineligible' && (
-        <>
+        <div className="relative">
           <div className="space-y-3">
-            <div className="w-16 h-16 mx-auto rounded-full bg-red-500/20 flex items-center justify-center">
-              <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-16 h-16 mx-auto rounded-xl bg-red-500/20 flex items-center justify-center border border-red-500/30">
+              <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
             </div>
-            <h3 className="text-xl font-bold text-white">Insufficient NULL Holdings</h3>
-            <div className="space-y-2">
+            <h3 className="text-xl font-bold text-white tracking-wide" style={{ fontFamily: "'Orbitron', sans-serif" }}>Insufficient Balance</h3>
+            <div className="space-y-1 text-sm">
               <p className="text-gray-400">
-                Your current balance: <span className="text-white font-mono">{(gateState.balance || 0).toLocaleString()} NULL</span>
+                Your balance: <span className="text-white font-mono">{(gateState.balance || 0).toLocaleString()} NULL</span>
               </p>
               <p className="text-gray-400">
-                Required: <span className="text-primary font-mono">{NULL_REQUIRED_BALANCE.toLocaleString()} NULL</span>
+                Required: <span className="text-[#00D9FF] font-mono">{NULL_REQUIRED_BALANCE.toLocaleString()} NULL</span>
               </p>
             </div>
-            <p className="text-sm text-gray-500 max-w-sm mx-auto">
-              You need at least {NULL_REQUIRED_BALANCE.toLocaleString()} NULL tokens to use the transfer feature.
+            <p className="text-xs text-gray-500 max-w-sm mx-auto pt-2">
+              Hold at least {NULL_REQUIRED_BALANCE.toLocaleString()} NULL tokens to access transfers.
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
             <Button
               onClick={() => {
                 navigator.clipboard.writeText("B7tP6jNAcSmnvcuKsTFdvTAJHMkEQaXse8TMxoq2pump");
-                // Could add toast notification here
               }}
               variant="outline"
-              className="border-primary/50 text-primary hover:bg-primary/10"
+              className="border-[#1a1a2e] text-[#00D9FF] hover:bg-[#00D9FF]/10 hover:border-[#00D9FF]/50"
             >
               Copy Token Address
             </Button>
             <Button
               onClick={handleRetryVerification}
-              className="bg-primary hover:bg-[#0a5fff] text-white"
+              className="bg-gradient-to-r from-[#00D9FF] to-[#0099b3] text-black font-bold"
             >
               Check Again
             </Button>
           </div>
-        </>
+        </div>
       )}
 
       {/* Error state */}
       {connected && gateState.status === 'error' && (
-        <>
+        <div className="relative">
           <div className="space-y-3">
-            <div className="w-16 h-16 mx-auto rounded-full bg-yellow-500/20 flex items-center justify-center">
-              <svg className="w-8 h-8 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-16 h-16 mx-auto rounded-xl bg-yellow-500/20 flex items-center justify-center border border-yellow-500/30">
+              <svg className="w-8 h-8 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h3 className="text-xl font-bold text-white">Verification Error</h3>
-            <p className="text-gray-400 max-w-sm mx-auto">
-              {gateState.errorMessage || 'Unable to verify your token holdings. Please try again.'}
+            <h3 className="text-xl font-bold text-white tracking-wide" style={{ fontFamily: "'Orbitron', sans-serif" }}>Verification Error</h3>
+            <p className="text-gray-500 max-w-sm mx-auto text-sm">
+              {gateState.errorMessage || 'Unable to verify your token holdings'}
             </p>
           </div>
           <Button
             onClick={handleRetryVerification}
-            className="bg-primary hover:bg-[#0a5fff] text-white"
+            className="mt-6 bg-gradient-to-r from-[#00D9FF] to-[#0099b3] text-black font-bold"
           >
             Try Again
           </Button>
-        </>
+        </div>
       )}
     </div>
   );
@@ -259,4 +262,3 @@ export function useTokenGateStatus() {
 }
 
 export default TokenGate;
-
