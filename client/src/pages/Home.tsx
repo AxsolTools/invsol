@@ -229,23 +229,80 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#050508] relative overflow-hidden">
-      {/* Tech grid background */}
-      <div className="fixed inset-0 pointer-events-none">
-        {/* Grid pattern */}
-        <div 
-          className="absolute inset-0 opacity-[0.08]"
-          style={{
-            backgroundImage: `
-              linear-gradient(rgba(0,217,255,0.3) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(0,217,255,0.3) 1px, transparent 1px)
-            `,
-            backgroundSize: '80px 80px'
-          }}
-        ></div>
+      {/* Animated background effects */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
         {/* Gradient overlays */}
         <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-[#00D9FF]/[0.08] to-transparent"></div>
         <div className="absolute bottom-0 right-0 w-[800px] h-[800px] bg-[#8B5CF6]/[0.05] rounded-full blur-[200px]"></div>
         <div className="absolute top-1/3 left-0 w-[600px] h-[600px] bg-[#00D9FF]/[0.04] rounded-full blur-[150px]"></div>
+        
+        {/* Data flow particles */}
+        <div className="absolute inset-0 data-flow-container">
+          {[...Array(12)].map((_, i) => (
+            <div
+              key={i}
+              className="data-particle"
+              style={{
+                left: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 8}s`,
+                animationDuration: `${8 + Math.random() * 4}s`
+              }}
+            ></div>
+          ))}
+        </div>
+        
+        {/* Network nodes */}
+        <div className="absolute inset-0 network-nodes">
+          {[...Array(8)].map((_, i) => (
+            <div
+              key={i}
+              className="network-node"
+              style={{
+                top: `${20 + Math.random() * 60}%`,
+                left: `${10 + Math.random() * 80}%`,
+                animationDelay: `${Math.random() * 3}s`
+              }}
+            >
+              <div className="network-node-pulse"></div>
+            </div>
+          ))}
+        </div>
+        
+        {/* Circuit paths */}
+        <svg className="absolute inset-0 w-full h-full circuit-paths" style={{ opacity: 0.15 }}>
+          <defs>
+            <linearGradient id="circuitGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#00D9FF" stopOpacity="0.3">
+                <animate attributeName="stopOpacity" values="0.3;0.6;0.3" dur="3s" repeatCount="indefinite" />
+              </stop>
+              <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0.3">
+                <animate attributeName="stopOpacity" values="0.3;0.6;0.3" dur="3s" begin="1.5s" repeatCount="indefinite" />
+              </stop>
+            </linearGradient>
+          </defs>
+          {[...Array(6)].map((_, i) => {
+            const x1 = 10 + (i * 15);
+            const y1 = 20 + (i % 3) * 30;
+            const x2 = 80 - (i * 10);
+            const y2 = 70 - (i % 2) * 20;
+            return (
+              <path
+                key={i}
+                d={`M ${x1} ${y1} Q ${(x1 + x2) / 2} ${(y1 + y2) / 2 + 20} ${x2} ${y2}`}
+                stroke="url(#circuitGradient)"
+                strokeWidth="1"
+                fill="none"
+                className="circuit-path"
+                style={{
+                  strokeDasharray: '200',
+                  strokeDashoffset: '200',
+                  animation: `circuit-flow ${4 + i}s linear infinite`,
+                  animationDelay: `${i * 0.5}s`
+                }}
+              />
+            );
+          })}
+        </svg>
       </div>
 
       {/* Header */}
@@ -306,13 +363,14 @@ export default function Home() {
                   
                   {/* Left content */}
                   <div className="space-y-8 text-center lg:text-left">
-                    {/* Status badge */}
-                    <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full border border-[#00D9FF]/20 bg-[#00D9FF]/5">
-                      <span className="relative flex h-2 w-2">
+                    {/* Status badge with data flow */}
+                    <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full border border-[#00D9FF]/20 bg-[#00D9FF]/5 relative overflow-hidden data-stream">
+                      <span className="relative flex h-2 w-2 z-10">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00D9FF] opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00D9FF]"></span>
                       </span>
-                      <span className="text-[11px] font-medium text-[#00D9FF] tracking-[0.2em] uppercase">System Online</span>
+                      <span className="text-[11px] font-medium text-[#00D9FF] tracking-[0.2em] uppercase relative z-10">System Online</span>
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#00D9FF]/10 to-transparent" style={{ animation: 'data-stream-flow 2s ease-in-out infinite' }}></div>
                     </div>
 
                     {/* Title */}
@@ -372,17 +430,29 @@ export default function Home() {
 
                   {/* Right - Logo display */}
                   <div className="hidden lg:flex justify-center items-center">
-                    <div className="relative">
-                      {/* Outer ring */}
-                      <div className="absolute -inset-16 border border-[#00D9FF]/10 rounded-full"></div>
-                      <div className="absolute -inset-24 border border-dashed border-[#8B5CF6]/10 rounded-full"></div>
+                    <div className="relative data-stream network-activity">
+                      {/* Outer ring with animated pulse */}
+                      <div className="absolute -inset-16 border border-[#00D9FF]/10 rounded-full">
+                        <div className="absolute inset-0 border border-[#00D9FF]/20 rounded-full animate-ping" style={{ animationDuration: '3s' }}></div>
+                      </div>
+                      <div className="absolute -inset-24 border border-dashed border-[#8B5CF6]/10 rounded-full">
+                        <div className="absolute inset-0 border border-[#8B5CF6]/20 rounded-full animate-ping" style={{ animationDuration: '4s', animationDelay: '1s' }}></div>
+                      </div>
                       <div className="absolute -inset-32 border border-[#00D9FF]/5 rounded-full"></div>
                       
-                      {/* Corner accents */}
-                      <div className="absolute -top-20 -left-20 w-10 h-10 border-t-2 border-l-2 border-[#00D9FF]/30"></div>
-                      <div className="absolute -top-20 -right-20 w-10 h-10 border-t-2 border-r-2 border-[#00D9FF]/30"></div>
-                      <div className="absolute -bottom-20 -left-20 w-10 h-10 border-b-2 border-l-2 border-[#8B5CF6]/30"></div>
-                      <div className="absolute -bottom-20 -right-20 w-10 h-10 border-b-2 border-r-2 border-[#8B5CF6]/30"></div>
+                      {/* Corner accents with connection lines */}
+                      <div className="absolute -top-20 -left-20 w-10 h-10 border-t-2 border-l-2 border-[#00D9FF]/30">
+                        <div className="absolute -top-1 -left-1 w-2 h-2 bg-[#00D9FF] rounded-full animate-pulse"></div>
+                      </div>
+                      <div className="absolute -top-20 -right-20 w-10 h-10 border-t-2 border-r-2 border-[#00D9FF]/30">
+                        <div className="absolute -top-1 -right-1 w-2 h-2 bg-[#00D9FF] rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+                      </div>
+                      <div className="absolute -bottom-20 -left-20 w-10 h-10 border-b-2 border-l-2 border-[#8B5CF6]/30">
+                        <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-[#8B5CF6] rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
+                      </div>
+                      <div className="absolute -bottom-20 -right-20 w-10 h-10 border-b-2 border-r-2 border-[#8B5CF6]/30">
+                        <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-[#8B5CF6] rounded-full animate-pulse" style={{ animationDelay: '1.5s' }}></div>
+                      </div>
                       
                       {/* Glow */}
                       <div className="absolute inset-0 bg-gradient-to-br from-[#00D9FF]/20 to-[#8B5CF6]/20 rounded-3xl blur-3xl scale-150"></div>
@@ -394,12 +464,14 @@ export default function Home() {
                         className="w-48 h-48 rounded-3xl relative shadow-2xl shadow-[#00D9FF]/20"
                       />
                       
-                      {/* Data points */}
-                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-3 py-1 rounded bg-black/80 border border-[#00D9FF]/20 text-[9px] text-[#00D9FF] font-mono">
-                        PROTOCOL_V2
+                      {/* Data points with activity indicators */}
+                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-3 py-1 rounded bg-black/80 border border-[#00D9FF]/20 text-[9px] text-[#00D9FF] font-mono relative">
+                        <span className="relative z-10">PROTOCOL_V2</span>
+                        <span className="absolute -right-1 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-[#00D9FF] rounded-full animate-pulse"></span>
                       </div>
-                      <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-3 py-1 rounded bg-black/80 border border-[#8B5CF6]/20 text-[9px] text-[#8B5CF6] font-mono">
-                        STEALTH_MODE
+                      <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-3 py-1 rounded bg-black/80 border border-[#8B5CF6]/20 text-[9px] text-[#8B5CF6] font-mono relative">
+                        <span className="relative z-10">STEALTH_MODE</span>
+                        <span className="absolute -right-1 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-[#8B5CF6] rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></span>
                       </div>
                     </div>
                   </div>
@@ -465,7 +537,7 @@ export default function Home() {
                   ].map((feature, i) => (
                     <div 
                       key={feature.title}
-                      className="group relative p-8 rounded-2xl border border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.05] transition-all duration-500"
+                      className="group relative p-8 rounded-2xl border border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.05] transition-all duration-500 data-stream"
                     >
                       {/* Content */}
                       <div className="relative">
