@@ -641,55 +641,197 @@ export default function Home() {
           </>
         )}
 
-        {/* Bridge View */}
+        {/* Bridge View - Completely Redesigned */}
         {view === "bridge" && (
-          <div className="min-h-screen flex items-center justify-center px-6 py-24">
-            <div className="w-full max-w-md">
+          <div className="min-h-screen py-12 px-6">
+            <div className="max-w-7xl mx-auto">
               
-              {/* Back */}
-              <button
-                onClick={() => setView("home")}
-                className="flex items-center gap-2 text-sm text-white/30 hover:text-white mb-8 transition-colors group"
-              >
-                <span className="group-hover:-translate-x-1 transition-transform">←</span>
-                <span>Back</span>
-              </button>
+              {/* Top Navigation */}
+              <div className="flex items-center justify-between mb-12">
+                <button
+                  onClick={() => setView("home")}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm text-white/50 hover:text-white hover:bg-white/5 transition-all"
+                >
+                  <span>←</span>
+                  <span>Dashboard</span>
+                </button>
+                <div className="flex items-center gap-3">
+                  <div className="px-3 py-1 rounded-full bg-[#00D9FF]/10 border border-[#00D9FF]/20">
+                    <span className="text-[10px] text-[#00D9FF] font-mono">SESSION_ACTIVE</span>
+                  </div>
+                </div>
+              </div>
 
-              {/* Bridge Card */}
-              <div className="relative">
-                {/* Glow */}
-                <div className="absolute -inset-1 bg-gradient-to-r from-[#00D9FF]/20 to-[#8B5CF6]/20 rounded-3xl blur-xl"></div>
+              {/* Main Content - Split Layout */}
+              <div className="grid lg:grid-cols-3 gap-8">
                 
-                <div className="relative bg-[#0d0d12] rounded-2xl border border-white/15 overflow-hidden">
-                  {/* Header */}
-                  <div className="px-8 py-6 border-b border-white/5 bg-gradient-to-r from-[#00D9FF]/5 to-transparent">
-                    <div className="flex items-center gap-3">
-                      <img src={APP_LOGO} alt="" className="w-8 h-8 rounded-lg" />
+                {/* Left Panel - Configuration */}
+                <div className="lg:col-span-2 space-y-6">
+                  
+                  {/* Mode Selection - Visual Toggle */}
+                  <div className="bg-[#0a0a0f] rounded-xl border border-white/10 p-6">
+                    <div className="flex items-center justify-between mb-6">
                       <div>
-                        <h1 className="text-base font-bold text-white tracking-wider" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                          {isSwapMode ? "CROSS-CHAIN" : "STEALTH BRIDGE"}
-                        </h1>
-                        <p className="text-[10px] text-white/40 tracking-wider uppercase">
-                          {isSwapMode ? "Swap & Route" : "Same Asset Transfer"}
-                        </p>
+                        <h2 className="text-lg font-bold text-white mb-1" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                          Transfer Mode
+                        </h2>
+                        <p className="text-xs text-white/40">Choose routing configuration</p>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <button
+                        onClick={() => setIsSwapMode(false)}
+                        className={`p-6 rounded-lg border-2 transition-all text-left ${
+                          !isSwapMode
+                            ? 'border-[#00D9FF] bg-[#00D9FF]/10'
+                            : 'border-white/10 bg-white/[0.02] hover:border-white/20'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className={`w-3 h-3 rounded-full ${!isSwapMode ? 'bg-[#00D9FF]' : 'bg-white/20'}`}></div>
+                          <span className="text-sm font-bold text-white">Direct Route</span>
+                        </div>
+                        <p className="text-xs text-white/50">Same asset, different wallet</p>
+                      </button>
+                      
+                      <button
+                        onClick={() => setIsSwapMode(true)}
+                        className={`p-6 rounded-lg border-2 transition-all text-left ${
+                          isSwapMode
+                            ? 'border-[#8B5CF6] bg-[#8B5CF6]/10'
+                            : 'border-white/10 bg-white/[0.02] hover:border-white/20'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className={`w-3 h-3 rounded-full ${isSwapMode ? 'bg-[#8B5CF6]' : 'bg-white/20'}`}></div>
+                          <span className="text-sm font-bold text-white">Asset Conversion</span>
+                        </div>
+                        <p className="text-xs text-white/50">Convert between different assets</p>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Source Configuration */}
+                  <div className="bg-[#0a0a0f] rounded-xl border border-white/10 p-6">
+                    <div className="flex items-center gap-2 mb-6">
+                      <div className="w-2 h-2 rounded-full bg-[#00D9FF]"></div>
+                      <h3 className="text-sm font-bold text-white">Source Configuration</h3>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs text-white/50 mb-2 uppercase tracking-wider">Asset</label>
+                        <Select value={selectedCurrency} onValueChange={setSelectedCurrency}>
+                          <SelectTrigger className="bg-[#050508] border-white/10 text-white h-12 rounded-lg focus:border-[#00D9FF]/50">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-[#0a0a0f] border-white/10">
+                            {currencies?.map((currency) => (
+                              <SelectItem key={currency.ticker} value={currency.ticker} className="text-white">
+                                <span className="font-semibold">{currency.symbol}</span>
+                                <span className="text-white/40 ml-2">{currency.name}</span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-xs text-white/50 mb-2 uppercase tracking-wider">Network</label>
+                        <Select value={selectedNetwork} onValueChange={setSelectedNetwork} disabled={availableNetworks.length <= 1}>
+                          <SelectTrigger className="bg-[#050508] border-white/10 text-white h-12 rounded-lg focus:border-[#00D9FF]/50 disabled:opacity-40">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-[#0a0a0f] border-white/10">
+                            {availableNetworks.map((network) => (
+                              <SelectItem key={network.id} value={network.id} className="text-white">
+                                {network.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                   </div>
 
-                  <div className="p-8 space-y-6">
-                    
-                    {/* Mode Toggle */}
-                    <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5">
-                      <div>
-                        <span className="text-sm font-medium text-white">Cross-Chain</span>
-                        <p className="text-[10px] text-white/30 mt-0.5">Swap between assets</p>
+                  {/* Destination Configuration (Swap Mode) */}
+                  {isSwapMode && (
+                    <div className="bg-[#0a0a0f] rounded-xl border border-white/10 p-6">
+                      <div className="flex items-center gap-2 mb-6">
+                        <div className="w-2 h-2 rounded-full bg-[#8B5CF6]"></div>
+                        <h3 className="text-sm font-bold text-white">Destination Configuration</h3>
                       </div>
-                      <Switch
-                        checked={isSwapMode}
-                        onCheckedChange={setIsSwapMode}
-                        className="data-[state=checked]:bg-[#00D9FF]"
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs text-white/50 mb-2 uppercase tracking-wider">Target Asset</label>
+                          <Select value={selectedToCurrency} onValueChange={setSelectedToCurrency}>
+                            <SelectTrigger className="bg-[#050508] border-white/10 text-white h-12 rounded-lg focus:border-[#8B5CF6]/50">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-[#0a0a0f] border-white/10">
+                              {currencies?.filter(c => c.ticker !== selectedCurrency).map((currency) => (
+                                <SelectItem key={currency.ticker} value={currency.ticker} className="text-white">
+                                  <span className="font-semibold">{currency.symbol}</span>
+                                  <span className="text-white/40 ml-2">{currency.name}</span>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-xs text-white/50 mb-2 uppercase tracking-wider">Target Network</label>
+                          <Select value={selectedToNetwork} onValueChange={setSelectedToNetwork} disabled={availableToNetworks.length <= 1}>
+                            <SelectTrigger className="bg-[#050508] border-white/10 text-white h-12 rounded-lg focus:border-[#8B5CF6]/50 disabled:opacity-40">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-[#0a0a0f] border-white/10">
+                              {availableToNetworks.map((network) => (
+                                <SelectItem key={network.id} value={network.id} className="text-white">
+                                  {network.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Recipient & Amount */}
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="bg-[#0a0a0f] rounded-xl border border-white/10 p-6">
+                      <label className="block text-xs text-white/50 mb-3 uppercase tracking-wider mb-3">
+                      Recipient Address {isSwapMode && toCurrencyConfig && `(${toCurrencyConfig.symbol})`}
+                      </label>
+                      <Input
+                        type="text"
+                        placeholder={isSwapMode ? (currentToNetwork?.addressPlaceholder || "0x...") : (currentNetwork?.addressPlaceholder || "0x...")}
+                        value={transferRecipient}
+                        onChange={(e) => setTransferRecipient(e.target.value)}
+                        className="bg-[#050508] border-white/10 text-white h-12 font-mono text-sm rounded-lg focus:border-[#00D9FF]/50 placeholder:text-white/20"
                       />
                     </div>
+                    
+                    <div className="bg-[#0a0a0f] rounded-xl border border-white/10 p-6">
+                      <label className="block text-xs text-white/50 mb-3 uppercase tracking-wider">Transfer Amount</label>
+                      <div className="relative">
+                        <Input
+                          type="number"
+                          step="0.000001"
+                          placeholder="0.00"
+                          value={transferAmount}
+                          onChange={(e) => setTransferAmount(e.target.value)}
+                          className="bg-[#050508] border-white/10 text-white h-12 text-lg rounded-lg pr-16 focus:border-[#00D9FF]/50 placeholder:text-white/20"
+                        />
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-white/40 font-semibold">
+                          {currentCurrency?.symbol || "SOL"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
 
                     {/* Source */}
                     <div className="space-y-3">
@@ -800,130 +942,183 @@ export default function Home() {
                       </div>
                     </div>
 
-                    {/* Estimate */}
-                    {transferAmount && parseFloat(transferAmount) > 0 && (
-                      <div className="rounded-xl bg-white/[0.02] border border-white/5 p-5 space-y-4">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-white/30">Fee</span>
+                  {/* Fee Estimate & Submit */}
+                  <div className="bg-[#0a0a0f] rounded-xl border border-white/10 p-6">
+                    {transferAmount && parseFloat(transferAmount) > 0 ? (
+                      <div className="space-y-4 mb-6">
+                        <div className="flex items-center justify-between py-3 border-b border-white/5">
+                          <span className="text-sm text-white/50">Network Fee</span>
                           {isEstimatingFees ? (
-                            <span className="w-20 h-4 bg-white/5 rounded animate-pulse"></span>
+                            <span className="w-24 h-4 bg-white/5 rounded animate-pulse"></span>
                           ) : feeEstimate?.feeAmount !== undefined ? (
-                            <span className="text-white/60">{Number(feeEstimate.feeAmount).toFixed(6)} {currentCurrency?.symbol}</span>
+                            <span className="text-sm text-white/70 font-mono">{Number(feeEstimate.feeAmount).toFixed(6)} {currentCurrency?.symbol}</span>
                           ) : (
-                            <span className="text-white/20">—</span>
+                            <span className="text-sm text-white/30">—</span>
                           )}
                         </div>
-                        <div className="h-px bg-white/5"></div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-white/30 text-sm">Recipient Gets</span>
+                        <div className="flex items-center justify-between py-3 border-b border-white/5">
+                          <span className="text-sm text-white/50">Output Amount</span>
                           {isEstimatingFees ? (
-                            <span className="w-28 h-7 bg-white/5 rounded animate-pulse"></span>
+                            <span className="w-32 h-6 bg-white/5 rounded animate-pulse"></span>
                           ) : feeEstimate?.receiveAmount !== undefined ? (
-                            <span className="text-2xl font-bold text-[#00D9FF]" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                              {Number(feeEstimate.receiveAmount).toFixed(6)}
-                              <span className="text-sm ml-1 text-white/40 font-normal">{isSwapMode ? toCurrencyConfig?.symbol : currentCurrency?.symbol}</span>
+                            <span className="text-xl font-bold text-[#00D9FF]" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                              {Number(feeEstimate.receiveAmount).toFixed(6)} {isSwapMode ? toCurrencyConfig?.symbol : currentCurrency?.symbol}
                             </span>
                           ) : (
-                            <span className="text-white/20">—</span>
+                            <span className="text-sm text-white/30">—</span>
                           )}
                         </div>
                         {feeEstimate && (feeEstimate as any).transactionSpeedForecast && (
-                          <>
-                            <div className="h-px bg-white/5"></div>
-                            <div className="flex justify-between text-sm">
-                              <span className="text-white/30">Est. Time</span>
-                              <span className="text-emerald-400 font-medium">~{(feeEstimate as any).transactionSpeedForecast} min</span>
-                            </div>
-                          </>
+                          <div className="flex items-center justify-between py-2">
+                            <span className="text-xs text-white/40">Estimated Duration</span>
+                            <span className="text-xs text-emerald-400 font-medium">~{(feeEstimate as any).transactionSpeedForecast} minutes</span>
+                          </div>
                         )}
                       </div>
+                    ) : (
+                      <div className="py-8 text-center">
+                        <p className="text-sm text-white/30">Enter amount to view fee estimate</p>
+                      </div>
                     )}
-
-                    {/* Submit */}
+                    
                     <TokenGate>
                       <Button
                         onClick={handleTransfer}
                         disabled={!transferRecipient || !transferAmount || transferMutation.isPending || (feeEstimate && !feeEstimate.isValid)}
-                        className="w-full h-14 rounded-xl text-sm font-bold tracking-[0.15em] bg-[#00D9FF] hover:bg-[#00e5ff] text-black disabled:opacity-20 disabled:cursor-not-allowed transition-all hover:shadow-[0_0_30px_rgba(0,217,255,0.4)]"
+                        className="w-full h-14 rounded-lg text-sm font-bold tracking-wider bg-gradient-to-r from-[#00D9FF] to-[#00b3d9] hover:from-[#00e5ff] hover:to-[#00c4e5] text-black disabled:opacity-20 disabled:cursor-not-allowed transition-all"
                         style={{ fontFamily: "'Orbitron', sans-serif" }}
                       >
-                        {transferMutation.isPending ? "GENERATING···" : "GENERATE DEPOSIT"}
+                        {transferMutation.isPending ? "INITIATING ROUTE..." : "INITIATE TRANSFER"}
                       </Button>
                     </TokenGate>
+                  </div>
+                </div>
 
-                    {/* Result */}
-                    {transactionResult && transactionResult.payinAddress && (
-                      <div className="rounded-xl bg-[#00D9FF]/5 border border-[#00D9FF]/20 p-6 space-y-5">
-                        
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-[#00D9FF]/20 flex items-center justify-center text-[#00D9FF]">
-                            ✓
-                          </div>
-                          <div>
-                            <p className="font-semibold text-white" style={{ fontFamily: "'Orbitron', sans-serif" }}>Route Generated</p>
-                            <p className="text-[10px] text-white/40">Awaiting deposit</p>
-                          </div>
+                {/* Right Panel - Info & Result */}
+                <div className="space-y-6">
+                  
+                  {/* Info Panel */}
+                  {!transactionResult && (
+                    <div className="bg-[#0a0a0f] rounded-xl border border-white/10 p-6 sticky top-24">
+                      <h3 className="text-sm font-bold text-white mb-4" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                        Transfer Details
+                      </h3>
+                      <div className="space-y-4 text-xs">
+                        <div>
+                          <span className="text-white/40">Mode:</span>
+                          <span className="text-white ml-2">{isSwapMode ? "Asset Conversion" : "Direct Route"}</span>
                         </div>
-
-                        {/* Status */}
-                        {transactionStatus && typeof transactionStatus === 'object' && 'status' in transactionStatus && (
-                          <div className="bg-black/30 rounded-xl p-4 space-y-3">
-                            <div className="flex justify-between items-center">
-                              <span className="text-[10px] text-white/30 uppercase tracking-widest">Status</span>
-                              <span className={`text-xs font-bold tracking-wider ${getStatusDisplay(String(transactionStatus.status)).color}`}>
-                                {getStatusDisplay(String(transactionStatus.status)).label}
-                              </span>
-                            </div>
-                            <Progress value={getStatusDisplay(String(transactionStatus.status)).progress} className="h-1" />
+                        <div>
+                          <span className="text-white/40">Source:</span>
+                          <span className="text-white ml-2">{currentCurrency?.symbol || "—"} ({currentNetwork?.name || "—"})</span>
+                        </div>
+                        {isSwapMode && (
+                          <div>
+                            <span className="text-white/40">Target:</span>
+                            <span className="text-white ml-2">{toCurrencyConfig?.symbol || "—"} ({currentToNetwork?.name || "—"})</span>
                           </div>
                         )}
-
-                        {/* Deposit Info */}
-                        <div className="space-y-4">
-                          <p className="text-sm text-white/50">
-                            Send exactly <span className="text-white font-bold">{transactionResult.amount?.toFixed(6)} {transactionResult.currency}</span>
-                          </p>
-                          
-                          <div className="flex justify-center p-4 bg-white rounded-xl">
-                            <QRCodeSVG value={transactionResult.payinAddress} size={160} level="H" />
-                          </div>
-
-                          <div className="flex gap-2">
-                            <code className="flex-1 text-[10px] font-mono bg-black/30 text-[#00D9FF] p-3 rounded-xl break-all">
-                              {transactionResult.payinAddress}
-                            </code>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                navigator.clipboard.writeText(transactionResult.payinAddress || "");
-                                toast.success("Copied");
-                              }}
-                              className="shrink-0 border-white/10 hover:bg-white/5 rounded-xl"
-                            >
-                              Copy
-                            </Button>
-                          </div>
-
-                          <p className="text-[10px] text-amber-400/80 bg-amber-400/10 rounded-xl p-3">
-                            ⚠ Send exact amount. {transactionResult.isSwap && `Recipient gets ${transactionResult.toCurrency}.`}
+                        <div className="pt-4 border-t border-white/5">
+                          <p className="text-white/50 leading-relaxed">
+                            Your transaction will be routed through our infrastructure with zero traceability.
                           </p>
                         </div>
+                      </div>
+                    </div>
+                  )}
 
+                  {/* Result Panel */}
+                  {transactionResult && transactionResult.payinAddress && (
+                    <div className="bg-[#0a0a0f] rounded-xl border border-[#00D9FF]/30 p-6 space-y-6 sticky top-24">
+                      
+                      {/* Header */}
+                      <div className="flex items-center justify-between pb-4 border-b border-white/10">
+                        <div>
+                          <h3 className="text-sm font-bold text-white mb-1" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                            Deposit Address
+                          </h3>
+                          <p className="text-[10px] text-white/40">Send funds to complete transfer</p>
+                        </div>
+                        <div className="w-8 h-8 rounded-full bg-[#00D9FF]/20 flex items-center justify-center">
+                          <span className="text-[#00D9FF] text-sm">✓</span>
+                        </div>
+                      </div>
+
+                      {/* Status */}
+                      {transactionStatus && typeof transactionStatus === 'object' && 'status' in transactionStatus && (
+                        <div className="bg-black/40 rounded-lg p-4 space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-[10px] text-white/40 uppercase tracking-wider">Processing</span>
+                            <span className={`text-xs font-bold ${getStatusDisplay(String(transactionStatus.status)).color}`}>
+                              {getStatusDisplay(String(transactionStatus.status)).label}
+                            </span>
+                          </div>
+                          <Progress value={getStatusDisplay(String(transactionStatus.status)).progress} className="h-1.5" />
+                        </div>
+                      )}
+
+                      {/* Amount Info */}
+                      <div className="bg-[#050508] rounded-lg p-4 border border-white/5">
+                        <div className="text-xs text-white/50 mb-2">Deposit Amount</div>
+                        <div className="text-lg font-bold text-white" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                          {transactionResult.amount?.toFixed(6)} {transactionResult.currency}
+                        </div>
+                        {transactionResult.isSwap && (
+                          <div className="text-xs text-white/40 mt-2">
+                            → Receives {transactionResult.toCurrency}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* QR Code */}
+                      <div className="flex justify-center p-4 bg-white rounded-lg">
+                        <QRCodeSVG value={transactionResult.payinAddress} size={180} level="H" />
+                      </div>
+
+                      {/* Address */}
+                      <div>
+                        <label className="block text-xs text-white/50 mb-2 uppercase tracking-wider">Address</label>
+                        <div className="flex gap-2">
+                          <code className="flex-1 text-[10px] font-mono bg-[#050508] text-[#00D9FF] p-3 rounded-lg break-all border border-white/5">
+                            {transactionResult.payinAddress}
+                          </code>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              navigator.clipboard.writeText(transactionResult.payinAddress || "");
+                              toast.success("Copied");
+                            }}
+                            className="shrink-0 border-white/10 hover:bg-white/5 rounded-lg"
+                          >
+                            Copy
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Warning */}
+                      <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
+                        <p className="text-[10px] text-amber-400/90 leading-relaxed">
+                          Send the exact amount shown above. {transactionResult.isSwap && `Recipient will receive ${transactionResult.toCurrency}.`}
+                        </p>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="space-y-2">
                         <Button
-                          variant="ghost"
-                          className="w-full text-white/30 hover:text-white hover:bg-white/5 rounded-xl"
+                          variant="outline"
+                          className="w-full border-white/10 hover:bg-white/5 rounded-lg"
                           onClick={() => {
                             setTransactionResult(null);
                             setTransferRecipient("");
                             setTransferAmount("");
                           }}
                         >
-                          New Transfer
+                          Create New Transfer
                         </Button>
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
