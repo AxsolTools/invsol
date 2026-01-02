@@ -6,7 +6,7 @@ export const APP_LOGO = "/logo.png";
 export const APP_NAME = "INVSOL";
 export const APP_TAGLINE = "Invisible Solutions";
 
-export const COMMUNITY_URL = "https://x.com/INVSOL_io";
+export const COMMUNITY_URL = "https://x.com/invsolbridge";
 export const GITHUB_URL = "https://github.com/INVSOL";
 
 // Generate login URL at runtime so redirect URI reflects the current origin.

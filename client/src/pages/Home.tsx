@@ -228,28 +228,28 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-[#000000] relative overflow-hidden">
+    <div className="min-h-screen bg-[#050508] relative overflow-hidden">
       {/* Tech grid background */}
       <div className="fixed inset-0 pointer-events-none">
         {/* Grid pattern */}
         <div 
-          className="absolute inset-0 opacity-[0.03]"
+          className="absolute inset-0 opacity-[0.08]"
           style={{
             backgroundImage: `
-              linear-gradient(rgba(0,217,255,0.5) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(0,217,255,0.5) 1px, transparent 1px)
+              linear-gradient(rgba(0,217,255,0.3) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(0,217,255,0.3) 1px, transparent 1px)
             `,
             backgroundSize: '80px 80px'
           }}
         ></div>
         {/* Gradient overlays */}
-        <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-[#00D9FF]/[0.05] to-transparent"></div>
-        <div className="absolute bottom-0 right-0 w-[800px] h-[800px] bg-[#8B5CF6]/[0.03] rounded-full blur-[200px]"></div>
-        <div className="absolute top-1/3 left-0 w-[600px] h-[600px] bg-[#00D9FF]/[0.02] rounded-full blur-[150px]"></div>
+        <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-[#00D9FF]/[0.08] to-transparent"></div>
+        <div className="absolute bottom-0 right-0 w-[800px] h-[800px] bg-[#8B5CF6]/[0.05] rounded-full blur-[200px]"></div>
+        <div className="absolute top-1/3 left-0 w-[600px] h-[600px] bg-[#00D9FF]/[0.04] rounded-full blur-[150px]"></div>
       </div>
 
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 border-b border-[#00D9FF]/10 bg-black/80 backdrop-blur-xl">
+      <header className="fixed top-0 left-0 right-0 z-50 border-b border-[#00D9FF]/15 bg-[#050508]/90 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <button onClick={handleLogoClick} className="flex items-center gap-3 group">
             <div className="relative">
@@ -299,13 +299,7 @@ export default function Home() {
           <>
             {/* Hero Section */}
             <section className="min-h-screen flex items-center justify-center px-6 relative overflow-hidden">
-              {/* Animated lines */}
-              <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-1/4 left-0 w-full h-px bg-gradient-to-r from-transparent via-[#00D9FF]/20 to-transparent"></div>
-                <div className="absolute top-3/4 left-0 w-full h-px bg-gradient-to-r from-transparent via-[#8B5CF6]/20 to-transparent"></div>
-                <div className="absolute top-0 left-1/4 w-px h-full bg-gradient-to-b from-transparent via-[#00D9FF]/10 to-transparent"></div>
-                <div className="absolute top-0 right-1/4 w-px h-full bg-gradient-to-b from-transparent via-[#8B5CF6]/10 to-transparent"></div>
-              </div>
+              {/* Animated lines - removed to prevent covering content */}
               
               <div className="max-w-5xl mx-auto relative">
                 <div className="grid lg:grid-cols-2 gap-16 items-center">
@@ -332,7 +326,7 @@ export default function Home() {
                     </div>
 
                     {/* Description */}
-                    <p className="text-lg text-white/50 leading-relaxed max-w-md lg:mx-0 mx-auto">
+                    <p className="text-lg text-white/60 leading-relaxed max-w-md lg:mx-0 mx-auto">
                       Next-generation cross-chain infrastructure. Transfer assets between networks with zero traceability.
                     </p>
 
@@ -471,16 +465,8 @@ export default function Home() {
                   ].map((feature, i) => (
                     <div 
                       key={feature.title}
-                      className="group relative p-8 rounded-2xl border border-white/5 bg-white/[0.01] hover:border-white/10 transition-all duration-500"
+                      className="group relative p-8 rounded-2xl border border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.05] transition-all duration-500"
                     >
-                      {/* Number */}
-                      <div 
-                        className="text-6xl font-black opacity-5 absolute top-4 right-4"
-                        style={{ fontFamily: "'Orbitron', sans-serif", color: feature.accent }}
-                      >
-                        0{i + 1}
-                      </div>
-                      
                       {/* Content */}
                       <div className="relative">
                         <div 
@@ -492,7 +478,7 @@ export default function Home() {
                         <h3 className="text-lg font-bold text-white mb-3 tracking-wide" style={{ fontFamily: "'Orbitron', sans-serif" }}>
                           {feature.title}
                         </h3>
-                        <p className="text-sm text-white/40 leading-relaxed">
+                        <p className="text-sm text-white/50 leading-relaxed">
                           {feature.desc}
                         </p>
                       </div>
@@ -520,29 +506,27 @@ export default function Home() {
                   </h2>
                 </div>
 
-                <div className="relative">
-                  {/* Connection line */}
-                  <div className="hidden md:block absolute top-8 left-[12.5%] right-[12.5%] h-px bg-gradient-to-r from-[#00D9FF]/20 via-[#8B5CF6]/20 to-[#00D9FF]/20"></div>
-                  
-                  <div className="grid md:grid-cols-4 gap-8">
-                    {[
-                      { num: "01", title: "Configure", desc: "Select chains and enter destination" },
-                      { num: "02", title: "Generate", desc: "Receive unique deposit address" },
-                      { num: "03", title: "Deposit", desc: "Send funds to generated address" },
-                      { num: "04", title: "Complete", desc: "Recipient receives anonymously" },
-                    ].map((step, i) => (
-                      <div key={step.num} className="relative text-center">
-                        {/* Step number */}
-                        <div className="w-16 h-16 mx-auto rounded-2xl bg-black border border-white/10 flex items-center justify-center mb-6 relative z-10">
-                          <span className="text-xl font-bold text-[#00D9FF]" style={{ fontFamily: "'Orbitron', sans-serif" }}>{step.num}</span>
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {[
+                    { title: "Configure", desc: "Select chains and enter destination", icon: "→" },
+                    { title: "Generate", desc: "Receive unique deposit address", icon: "⚡" },
+                    { title: "Deposit", desc: "Send funds to generated address", icon: "↓" },
+                    { title: "Complete", desc: "Recipient receives anonymously", icon: "✓" },
+                  ].map((step, i) => (
+                    <div key={step.title} className="group relative p-6 rounded-xl border border-white/5 bg-white/[0.02] hover:border-[#00D9FF/20 hover:bg-white/[0.03] transition-all">
+                      <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 rounded-lg bg-[#00D9FF]/10 border border-[#00D9FF]/20 flex items-center justify-center text-xl shrink-0 group-hover:bg-[#00D9FF]/20 transition-colors">
+                          {step.icon}
                         </div>
-                        <h4 className="text-sm font-bold text-white mb-2 tracking-wider" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                          {step.title}
-                        </h4>
-                        <p className="text-xs text-white/40">{step.desc}</p>
+                        <div>
+                          <h4 className="text-base font-bold text-white mb-2 tracking-wide" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                            {step.title}
+                          </h4>
+                          <p className="text-sm text-white/50 leading-relaxed">{step.desc}</p>
+                        </div>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </section>
@@ -604,7 +588,7 @@ export default function Home() {
                 {/* Glow */}
                 <div className="absolute -inset-1 bg-gradient-to-r from-[#00D9FF]/20 to-[#8B5CF6]/20 rounded-3xl blur-xl"></div>
                 
-                <div className="relative bg-[#0a0a0f] rounded-2xl border border-white/10 overflow-hidden">
+                <div className="relative bg-[#0d0d12] rounded-2xl border border-white/15 overflow-hidden">
                   {/* Header */}
                   <div className="px-8 py-6 border-b border-white/5 bg-gradient-to-r from-[#00D9FF]/5 to-transparent">
                     <div className="flex items-center gap-3">
