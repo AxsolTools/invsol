@@ -228,48 +228,60 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-[#020204] relative overflow-hidden">
-      {/* Ambient orbs */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] bg-[#00D9FF]/[0.04] rounded-full blur-[180px]"></div>
-        <div className="absolute -bottom-40 -right-40 w-[500px] h-[500px] bg-[#8B5CF6]/[0.04] rounded-full blur-[180px]"></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#00D9FF]/[0.02] rounded-full blur-[200px]"></div>
+    <div className="min-h-screen bg-[#000000] relative overflow-hidden">
+      {/* Tech grid background */}
+      <div className="fixed inset-0 pointer-events-none">
+        {/* Grid pattern */}
+        <div 
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: `
+              linear-gradient(rgba(0,217,255,0.5) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(0,217,255,0.5) 1px, transparent 1px)
+            `,
+            backgroundSize: '80px 80px'
+          }}
+        ></div>
+        {/* Gradient overlays */}
+        <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-[#00D9FF]/[0.05] to-transparent"></div>
+        <div className="absolute bottom-0 right-0 w-[800px] h-[800px] bg-[#8B5CF6]/[0.03] rounded-full blur-[200px]"></div>
+        <div className="absolute top-1/3 left-0 w-[600px] h-[600px] bg-[#00D9FF]/[0.02] rounded-full blur-[150px]"></div>
       </div>
 
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-[#020204]/60 backdrop-blur-2xl border-b border-white/[0.03]">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+      <header className="fixed top-0 left-0 right-0 z-50 border-b border-[#00D9FF]/10 bg-black/80 backdrop-blur-xl">
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <button onClick={handleLogoClick} className="flex items-center gap-3 group">
             <div className="relative">
-              <div className="absolute inset-0 bg-[#00D9FF]/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              <img src={APP_LOGO} alt="" className="w-10 h-10 rounded-xl relative" />
+              <img src={APP_LOGO} alt="" className="w-9 h-9 rounded-xl" />
+              <div className="absolute -inset-1 bg-[#00D9FF]/20 rounded-xl blur-md opacity-0 group-hover:opacity-100 transition-opacity"></div>
             </div>
             <div className="hidden sm:block">
-              <span className="text-base font-bold tracking-wider text-white" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+              <span className="text-base font-bold tracking-[0.2em] text-white" style={{ fontFamily: "'Orbitron', sans-serif" }}>
                 INVSOL
               </span>
-              <span className="text-[10px] text-[#00D9FF] tracking-[0.25em] block -mt-0.5">BRIDGE</span>
+              <div className="h-px w-full bg-gradient-to-r from-[#00D9FF] to-transparent"></div>
             </div>
           </button>
 
-          <div className="flex items-center gap-5">
-            <a href={COMMUNITY_URL} target="_blank" rel="noopener noreferrer" className="text-[11px] text-white/30 hover:text-[#00D9FF] transition-colors tracking-widest uppercase">
+          <div className="flex items-center gap-6">
+            <a href={COMMUNITY_URL} target="_blank" rel="noopener noreferrer" className="text-[11px] text-white/40 hover:text-[#00D9FF] transition-colors tracking-[0.15em] uppercase">
               Community
             </a>
             
             {connected && publicKey ? (
               <button
                 onClick={handleDisconnectWallet}
-                className="flex items-center gap-2.5 px-4 py-2 rounded-full text-xs bg-white/[0.03] border border-white/[0.06] text-white/60 hover:border-[#00D9FF]/30 hover:text-white transition-all"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs bg-[#00D9FF]/5 border border-[#00D9FF]/20 text-[#00D9FF] hover:bg-[#00D9FF]/10 transition-all font-mono"
               >
-                <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]"></span>
-                <span className="font-mono">{publicKey.toBase58().slice(0, 4)}····{publicKey.toBase58().slice(-4)}</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"></span>
+                {publicKey.toBase58().slice(0, 4)}····{publicKey.toBase58().slice(-4)}
               </button>
             ) : (
               <button
                 onClick={handleConnectWallet}
                 disabled={connecting}
-                className="px-5 py-2 rounded-full text-xs font-bold bg-[#00D9FF] text-[#020204] hover:shadow-[0_0_30px_rgba(0,217,255,0.4)] transition-all disabled:opacity-50"
+                className="px-5 py-2 rounded-lg text-xs font-bold tracking-[0.1em] bg-[#00D9FF] text-black hover:shadow-[0_0_30px_rgba(0,217,255,0.5)] transition-all disabled:opacity-50"
                 style={{ fontFamily: "'Orbitron', sans-serif" }}
               >
                 {connecting ? "···" : "CONNECT"}
@@ -287,218 +299,287 @@ export default function Home() {
           <>
             {/* Hero Section */}
             <section className="min-h-screen flex items-center justify-center px-6 relative overflow-hidden">
-              {/* Center glow */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-radial from-[#00D9FF]/10 to-transparent rounded-full blur-3xl pointer-events-none"></div>
+              {/* Animated lines */}
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-1/4 left-0 w-full h-px bg-gradient-to-r from-transparent via-[#00D9FF]/20 to-transparent"></div>
+                <div className="absolute top-3/4 left-0 w-full h-px bg-gradient-to-r from-transparent via-[#8B5CF6]/20 to-transparent"></div>
+                <div className="absolute top-0 left-1/4 w-px h-full bg-gradient-to-b from-transparent via-[#00D9FF]/10 to-transparent"></div>
+                <div className="absolute top-0 right-1/4 w-px h-full bg-gradient-to-b from-transparent via-[#8B5CF6]/10 to-transparent"></div>
+              </div>
               
-              <div className="max-w-4xl mx-auto text-center relative">
-                {/* Title with orbiting assets */}
-                <div className="relative mb-8">
-                  {/* Orbiting ring container */}
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] sm:w-[440px] sm:h-[440px] lg:w-[540px] lg:h-[540px] pointer-events-none">
-                    {/* Orbit path (visual) */}
-                    <div className="absolute inset-0 rounded-full border border-white/[0.04]"></div>
-                    <div className="absolute inset-6 rounded-full border border-dashed border-white/[0.02]"></div>
-                    
-                    {/* Orbiting assets container - spins continuously */}
-                    <div 
-                      className="absolute inset-0"
-                      style={{ animation: 'orbit-spin 25s linear infinite' }}
-                    >
-                      {[
-                        { symbol: 'BTC', color: '#F7931A' },
-                        { symbol: 'ETH', color: '#627EEA' },
-                        { symbol: 'SOL', color: '#00D9FF' },
-                        { symbol: 'BNB', color: '#F3BA2F' },
-                        { symbol: 'XRP', color: '#FFFFFF' },
-                        { symbol: 'USDT', color: '#26A17B' },
-                        { symbol: 'USDC', color: '#2775CA' },
-                      ].map((asset, index) => {
-                        const angle = (index * 360) / 7;
-                        const radians = (angle * Math.PI) / 180;
-                        // Position on circle edge
-                        const x = Math.cos(radians) * 50; // 50% of container
-                        const y = Math.sin(radians) * 50;
-                        return (
-                          <div
-                            key={asset.symbol}
-                            className="absolute"
-                            style={{
-                              top: `calc(50% + ${y}%)`,
-                              left: `calc(50% + ${x}%)`,
-                              transform: 'translate(-50%, -50%)',
-                            }}
-                          >
-                            <div 
-                              className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full bg-[#0a0a12] border border-white/[0.1] flex items-center gap-1.5 sm:gap-2 shadow-xl whitespace-nowrap"
-                              style={{ animation: 'orbit-counter-spin 25s linear infinite' }}
-                            >
-                              <div 
-                                className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full shrink-0" 
-                                style={{ backgroundColor: asset.color, boxShadow: `0 0 10px ${asset.color}` }}
-                              ></div>
-                              <span className="text-[9px] sm:text-[11px] font-bold text-white/90 tracking-wider">{asset.symbol}</span>
-                            </div>
-                          </div>
-                        );
-                      })}
+              <div className="max-w-5xl mx-auto relative">
+                <div className="grid lg:grid-cols-2 gap-16 items-center">
+                  
+                  {/* Left content */}
+                  <div className="space-y-8 text-center lg:text-left">
+                    {/* Status badge */}
+                    <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full border border-[#00D9FF]/20 bg-[#00D9FF]/5">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00D9FF] opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00D9FF]"></span>
+                      </span>
+                      <span className="text-[11px] font-medium text-[#00D9FF] tracking-[0.2em] uppercase">System Online</span>
+                    </div>
+
+                    {/* Title */}
+                    <div>
+                      <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-[0.9]" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                        <span className="text-white">INVSOL</span>
+                        <br />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00D9FF] to-[#8B5CF6]">BRIDGE</span>
+                      </h1>
+                      <div className="mt-4 h-1 w-20 bg-gradient-to-r from-[#00D9FF] to-[#8B5CF6] lg:mx-0 mx-auto"></div>
+                    </div>
+
+                    {/* Description */}
+                    <p className="text-lg text-white/50 leading-relaxed max-w-md lg:mx-0 mx-auto">
+                      Next-generation cross-chain infrastructure. Transfer assets between networks with zero traceability.
+                    </p>
+
+                    {/* Stats row */}
+                    <div className="flex items-center gap-8 justify-center lg:justify-start">
+                      <div>
+                        <div className="text-2xl font-bold text-white" style={{ fontFamily: "'Orbitron', sans-serif" }}>7+</div>
+                        <div className="text-[10px] text-white/30 tracking-wider uppercase">Chains</div>
+                      </div>
+                      <div className="w-px h-10 bg-white/10"></div>
+                      <div>
+                        <div className="text-2xl font-bold text-white" style={{ fontFamily: "'Orbitron', sans-serif" }}>&lt;5m</div>
+                        <div className="text-[10px] text-white/30 tracking-wider uppercase">Avg Time</div>
+                      </div>
+                      <div className="w-px h-10 bg-white/10"></div>
+                      <div>
+                        <div className="text-2xl font-bold text-[#00D9FF]" style={{ fontFamily: "'Orbitron', sans-serif" }}>0</div>
+                        <div className="text-[10px] text-white/30 tracking-wider uppercase">Trace</div>
+                      </div>
+                    </div>
+
+                    {/* CTA */}
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                      <button
+                        onClick={() => setView("bridge")}
+                        className="group px-8 py-4 rounded-lg font-bold tracking-[0.1em] bg-[#00D9FF] text-black hover:shadow-[0_0_40px_rgba(0,217,255,0.5)] transition-all flex items-center justify-center gap-3"
+                        style={{ fontFamily: "'Orbitron', sans-serif" }}
+                      >
+                        LAUNCH APP
+                        <span className="group-hover:translate-x-1 transition-transform">→</span>
+                      </button>
+                      <a
+                        href={COMMUNITY_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-8 py-4 rounded-lg font-bold tracking-[0.1em] border border-white/10 text-white/60 hover:border-[#00D9FF]/30 hover:text-white transition-all text-center"
+                        style={{ fontFamily: "'Orbitron', sans-serif" }}
+                      >
+                        LEARN MORE
+                      </a>
                     </div>
                   </div>
 
-                  {/* Title (centered, above orbit) */}
-                  <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight relative z-10 py-20 sm:py-28" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                    <span className="text-white">INVSOL</span>
-                    <span className="text-[#00D9FF]"> BRIDGE</span>
-                  </h1>
+                  {/* Right - Logo display */}
+                  <div className="hidden lg:flex justify-center items-center">
+                    <div className="relative">
+                      {/* Outer ring */}
+                      <div className="absolute -inset-16 border border-[#00D9FF]/10 rounded-full"></div>
+                      <div className="absolute -inset-24 border border-dashed border-[#8B5CF6]/10 rounded-full"></div>
+                      <div className="absolute -inset-32 border border-[#00D9FF]/5 rounded-full"></div>
+                      
+                      {/* Corner accents */}
+                      <div className="absolute -top-20 -left-20 w-10 h-10 border-t-2 border-l-2 border-[#00D9FF]/30"></div>
+                      <div className="absolute -top-20 -right-20 w-10 h-10 border-t-2 border-r-2 border-[#00D9FF]/30"></div>
+                      <div className="absolute -bottom-20 -left-20 w-10 h-10 border-b-2 border-l-2 border-[#8B5CF6]/30"></div>
+                      <div className="absolute -bottom-20 -right-20 w-10 h-10 border-b-2 border-r-2 border-[#8B5CF6]/30"></div>
+                      
+                      {/* Glow */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-[#00D9FF]/20 to-[#8B5CF6]/20 rounded-3xl blur-3xl scale-150"></div>
+                      
+                      {/* Logo */}
+                      <img 
+                        src={APP_LOGO} 
+                        alt="INVSOL" 
+                        className="w-48 h-48 rounded-3xl relative shadow-2xl shadow-[#00D9FF]/20"
+                      />
+                      
+                      {/* Data points */}
+                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-3 py-1 rounded bg-black/80 border border-[#00D9FF]/20 text-[9px] text-[#00D9FF] font-mono">
+                        PROTOCOL_V2
+                      </div>
+                      <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-3 py-1 rounded bg-black/80 border border-[#8B5CF6]/20 text-[9px] text-[#8B5CF6] font-mono">
+                        STEALTH_MODE
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Tagline */}
-                <p className="text-lg sm:text-xl text-white/40 mb-12 max-w-xl mx-auto leading-relaxed">
-                  The invisible bridge between blockchains. Move assets across chains with zero trace linking origin to destination.
-                </p>
-
-                {/* CTA */}
-                <button
-                  onClick={() => setView("bridge")}
-                  className="group relative px-10 py-4 rounded-2xl font-bold tracking-wider transition-all"
-                  style={{ fontFamily: "'Orbitron', sans-serif" }}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#00D9FF] to-[#00b3d9] rounded-2xl"></div>
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#00D9FF] to-[#00b3d9] rounded-2xl blur-xl opacity-50 group-hover:opacity-80 transition-opacity"></div>
-                  <span className="relative text-[#020204] flex items-center gap-3">
-                    ENTER BRIDGE
-                    <span className="text-lg">→</span>
-                  </span>
-                </button>
+                {/* Supported chains bar */}
+                <div className="mt-20 pt-10 border-t border-white/5">
+                  <div className="flex flex-wrap items-center justify-center gap-6">
+                    <span className="text-[10px] text-white/20 tracking-widest uppercase">Supported</span>
+                    {[
+                      { symbol: 'BTC', color: '#F7931A' },
+                      { symbol: 'ETH', color: '#627EEA' },
+                      { symbol: 'SOL', color: '#00D9FF' },
+                      { symbol: 'BNB', color: '#F3BA2F' },
+                      { symbol: 'XRP', color: '#FFFFFF' },
+                      { symbol: 'USDT', color: '#26A17B' },
+                      { symbol: 'USDC', color: '#2775CA' },
+                    ].map((asset) => (
+                      <div key={asset.symbol} className="flex items-center gap-2 text-white/40 hover:text-white/60 transition-colors">
+                        <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: asset.color }}></div>
+                        <span className="text-xs font-medium tracking-wider">{asset.symbol}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </section>
 
             {/* Features Section */}
-            <section className="py-32 px-6 border-t border-white/[0.03]">
-              <div className="max-w-5xl mx-auto">
-                
+            <section className="py-32 px-6 relative">
+              <div className="max-w-6xl mx-auto">
                 {/* Section header */}
                 <div className="text-center mb-20">
-                  <span className="text-[10px] text-[#00D9FF] tracking-[0.4em] uppercase mb-4 block">Protocol Features</span>
-                  <h2 className="text-3xl sm:text-4xl font-bold text-white" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                    How the Bridge Works
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded border border-[#00D9FF]/20 bg-[#00D9FF]/5 mb-6">
+                    <span className="text-[10px] text-[#00D9FF] tracking-[0.3em] uppercase">Protocol</span>
+                  </div>
+                  <h2 className="text-4xl sm:text-5xl font-bold text-white mb-4" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                    Core Technology
                   </h2>
+                  <p className="text-white/40 max-w-lg mx-auto">
+                    Enterprise-grade infrastructure for anonymous cross-chain transfers
+                  </p>
                 </div>
 
-                {/* Feature cards */}
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  
-                  {/* Card 1 */}
-                  <div className="group bg-white/[0.01] hover:bg-white/[0.03] border border-white/[0.04] hover:border-[#00D9FF]/20 rounded-2xl p-8 transition-all duration-500">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#00D9FF]/20 to-[#00D9FF]/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                      <div className="w-6 h-6 border-2 border-[#00D9FF] rounded-lg relative">
-                        <div className="absolute inset-1 bg-[#00D9FF] rounded-sm"></div>
-                      </div>
-                    </div>
-                    <h3 className="text-lg font-bold text-white mb-3" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                      Chain Agnostic
-                    </h3>
-                    <p className="text-sm text-white/40 leading-relaxed">
-                      Bridge between any supported chain seamlessly. BTC to SOL, ETH to BNB, or any combination.
-                    </p>
-                  </div>
-
-                  {/* Card 2 */}
-                  <div className="group bg-white/[0.01] hover:bg-white/[0.03] border border-white/[0.04] hover:border-[#8B5CF6]/20 rounded-2xl p-8 transition-all duration-500">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#8B5CF6]/20 to-[#8B5CF6]/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                      <div className="relative w-6 h-6">
-                        <div className="absolute inset-0 border-2 border-[#8B5CF6] rounded-full"></div>
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-[#8B5CF6] rounded-full"></div>
-                      </div>
-                    </div>
-                    <h3 className="text-lg font-bold text-white mb-3" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                      Zero Trace
-                    </h3>
-                    <p className="text-sm text-white/40 leading-relaxed">
-                      Origin and destination are mathematically unlinked. No trail for analytics to follow.
-                    </p>
-                  </div>
-
-                  {/* Card 3 */}
-                  <div className="group bg-white/[0.01] hover:bg-white/[0.03] border border-white/[0.04] hover:border-[#00D9FF]/20 rounded-2xl p-8 transition-all duration-500">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#00D9FF]/20 to-[#8B5CF6]/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                      <div className="w-6 h-6 relative">
-                        <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-[#00D9FF]"></div>
-                        <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-[#8B5CF6]"></div>
-                      </div>
-                    </div>
-                    <h3 className="text-lg font-bold text-white mb-3" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                      Self-Custody
-                    </h3>
-                    <p className="text-sm text-white/40 leading-relaxed">
-                      Your keys never leave your wallet. We route, we don't hold.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            {/* Process Section */}
-            <section className="py-32 px-6 border-t border-white/[0.03]">
-              <div className="max-w-4xl mx-auto">
-                <div className="text-center mb-20">
-                  <span className="text-[10px] text-[#8B5CF6] tracking-[0.4em] uppercase mb-4 block">Simple Process</span>
-                  <h2 className="text-3xl sm:text-4xl font-bold text-white" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                    Four Steps to Invisible
-                  </h2>
-                </div>
-
-                <div className="space-y-0">
+                {/* Feature grid */}
+                <div className="grid md:grid-cols-3 gap-6">
                   {[
-                    { num: "01", title: "Configure", desc: "Select source asset, destination asset, and receiving wallet address" },
-                    { num: "02", title: "Generate", desc: "System creates a unique one-time deposit address for your transfer" },
-                    { num: "03", title: "Deposit", desc: "Send the exact amount to the generated address from any wallet" },
-                    { num: "04", title: "Receive", desc: "Destination wallet receives funds with no traceable connection" },
-                  ].map((step, i) => (
-                    <div key={step.num} className="flex items-start gap-8 py-8 border-b border-white/[0.03] last:border-0">
-                      <span className="text-5xl font-black text-white/[0.04] shrink-0 w-20" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                        {step.num}
-                      </span>
-                      <div>
-                        <h3 className="text-xl font-bold text-white mb-2" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                          {step.title}
-                        </h3>
-                        <p className="text-white/40 leading-relaxed">{step.desc}</p>
+                    {
+                      title: "Chain Agnostic",
+                      desc: "Seamlessly bridge between any supported blockchain. BTC, ETH, SOL, BNB, XRP and stablecoins.",
+                      accent: "#00D9FF"
+                    },
+                    {
+                      title: "Zero Knowledge",
+                      desc: "Origin and destination wallets are mathematically unlinked. No trail for analytics to follow.",
+                      accent: "#8B5CF6"
+                    },
+                    {
+                      title: "Non-Custodial",
+                      desc: "Your private keys never leave your wallet. We route transactions, we don't hold funds.",
+                      accent: "#00D9FF"
+                    }
+                  ].map((feature, i) => (
+                    <div 
+                      key={feature.title}
+                      className="group relative p-8 rounded-2xl border border-white/5 bg-white/[0.01] hover:border-white/10 transition-all duration-500"
+                    >
+                      {/* Number */}
+                      <div 
+                        className="text-6xl font-black opacity-5 absolute top-4 right-4"
+                        style={{ fontFamily: "'Orbitron', sans-serif", color: feature.accent }}
+                      >
+                        0{i + 1}
                       </div>
+                      
+                      {/* Content */}
+                      <div className="relative">
+                        <div 
+                          className="w-10 h-10 rounded-lg flex items-center justify-center mb-6"
+                          style={{ backgroundColor: `${feature.accent}10`, border: `1px solid ${feature.accent}30` }}
+                        >
+                          <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: feature.accent }}></div>
+                        </div>
+                        <h3 className="text-lg font-bold text-white mb-3 tracking-wide" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                          {feature.title}
+                        </h3>
+                        <p className="text-sm text-white/40 leading-relaxed">
+                          {feature.desc}
+                        </p>
+                      </div>
+                      
+                      {/* Bottom accent */}
+                      <div 
+                        className="absolute bottom-0 left-8 right-8 h-px opacity-0 group-hover:opacity-100 transition-opacity"
+                        style={{ background: `linear-gradient(90deg, transparent, ${feature.accent}50, transparent)` }}
+                      ></div>
                     </div>
                   ))}
                 </div>
               </div>
             </section>
 
+            {/* Process Section */}
+            <section className="py-32 px-6 border-t border-white/5 relative">
+              <div className="max-w-5xl mx-auto">
+                <div className="text-center mb-20">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded border border-[#8B5CF6]/20 bg-[#8B5CF6]/5 mb-6">
+                    <span className="text-[10px] text-[#8B5CF6] tracking-[0.3em] uppercase">Workflow</span>
+                  </div>
+                  <h2 className="text-4xl sm:text-5xl font-bold text-white" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                    How It Works
+                  </h2>
+                </div>
+
+                <div className="relative">
+                  {/* Connection line */}
+                  <div className="hidden md:block absolute top-8 left-[12.5%] right-[12.5%] h-px bg-gradient-to-r from-[#00D9FF]/20 via-[#8B5CF6]/20 to-[#00D9FF]/20"></div>
+                  
+                  <div className="grid md:grid-cols-4 gap-8">
+                    {[
+                      { num: "01", title: "Configure", desc: "Select chains and enter destination" },
+                      { num: "02", title: "Generate", desc: "Receive unique deposit address" },
+                      { num: "03", title: "Deposit", desc: "Send funds to generated address" },
+                      { num: "04", title: "Complete", desc: "Recipient receives anonymously" },
+                    ].map((step, i) => (
+                      <div key={step.num} className="relative text-center">
+                        {/* Step number */}
+                        <div className="w-16 h-16 mx-auto rounded-2xl bg-black border border-white/10 flex items-center justify-center mb-6 relative z-10">
+                          <span className="text-xl font-bold text-[#00D9FF]" style={{ fontFamily: "'Orbitron', sans-serif" }}>{step.num}</span>
+                        </div>
+                        <h4 className="text-sm font-bold text-white mb-2 tracking-wider" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                          {step.title}
+                        </h4>
+                        <p className="text-xs text-white/40">{step.desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </section>
+
             {/* CTA Section */}
-            <section className="py-32 px-6 border-t border-white/[0.03]">
-              <div className="max-w-2xl mx-auto text-center">
-                <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                  Start Bridging
+            <section className="py-32 px-6 border-t border-white/5">
+              <div className="max-w-3xl mx-auto text-center">
+                <h2 className="text-4xl sm:text-5xl font-bold text-white mb-6" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                  Ready to Bridge?
                 </h2>
-                <p className="text-white/40 mb-10">
-                  Your first invisible transfer takes less than a minute to set up.
+                <p className="text-white/40 mb-10 max-w-md mx-auto">
+                  Start your first anonymous transfer in under 60 seconds.
                 </p>
                 <button
                   onClick={() => setView("bridge")}
-                  className="px-12 py-4 rounded-2xl bg-white text-[#020204] font-bold tracking-wider hover:shadow-[0_0_40px_rgba(255,255,255,0.2)] transition-all"
+                  className="px-12 py-5 rounded-lg font-bold tracking-[0.15em] bg-gradient-to-r from-[#00D9FF] to-[#8B5CF6] text-black hover:shadow-[0_0_50px_rgba(0,217,255,0.4)] transition-all"
                   style={{ fontFamily: "'Orbitron', sans-serif" }}
                 >
-                  OPEN BRIDGE
+                  LAUNCH BRIDGE
                 </button>
               </div>
             </section>
 
             {/* Footer */}
-            <footer className="py-12 px-6 border-t border-white/[0.03]">
+            <footer className="py-10 px-6 border-t border-white/5">
               <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                  <img src={APP_LOGO} alt="" className="w-8 h-8 rounded-lg opacity-40" />
-                  <span className="text-sm text-white/20">INVSOL BRIDGE</span>
+                  <img src={APP_LOGO} alt="" className="w-7 h-7 rounded-lg opacity-60" />
+                  <span className="text-xs text-white/30 tracking-wider">INVSOL BRIDGE</span>
                 </div>
-                <a href={COMMUNITY_URL} target="_blank" rel="noopener noreferrer" className="text-xs text-white/20 hover:text-[#00D9FF] transition-colors">
-                  Join Community →
-                </a>
+                <div className="flex items-center gap-6">
+                  <a href={COMMUNITY_URL} target="_blank" rel="noopener noreferrer" className="text-[10px] text-white/30 hover:text-[#00D9FF] transition-colors tracking-wider">
+                    COMMUNITY
+                  </a>
+                  <span className="text-white/10">|</span>
+                  <span className="text-[10px] text-white/20 tracking-wider">© 2026</span>
+                </div>
               </div>
             </footer>
           </>
@@ -519,108 +600,67 @@ export default function Home() {
               </button>
 
               {/* Bridge Card */}
-              <div className="bg-[#0a0a10] rounded-3xl border border-white/[0.05] shadow-2xl overflow-hidden">
+              <div className="relative">
+                {/* Glow */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-[#00D9FF]/20 to-[#8B5CF6]/20 rounded-3xl blur-xl"></div>
                 
-                {/* Header */}
-                <div className="px-8 py-6 bg-gradient-to-r from-[#00D9FF]/[0.08] to-transparent border-b border-white/[0.03]">
-                  <div className="flex items-center gap-3">
-                    <img src={APP_LOGO} alt="" className="w-8 h-8 rounded-lg" />
-                    <div>
-                      <h1 className="text-lg font-bold text-white tracking-wide" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                        {isSwapMode ? "CROSS-CHAIN BRIDGE" : "STEALTH BRIDGE"}
-                      </h1>
-                      <p className="text-[11px] text-white/30 tracking-wider uppercase">
-                        {isSwapMode ? "Swap & Route Anonymously" : "Same Asset · Broken Chain"}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-8 space-y-6">
-                  
-                  {/* Mode Toggle */}
-                  <div className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-white/[0.04]">
-                    <div>
-                      <span className="text-sm font-medium text-white">Cross-Chain</span>
-                      <p className="text-[11px] text-white/30 mt-0.5">Convert between assets</p>
-                    </div>
-                    <Switch
-                      checked={isSwapMode}
-                      onCheckedChange={setIsSwapMode}
-                      className="data-[state=checked]:bg-[#00D9FF]"
-                    />
-                  </div>
-
-                  {/* Source */}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-[11px] font-medium text-white/40 uppercase tracking-widest">
-                        {isSwapMode ? "From" : "Asset"}
-                      </Label>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <Select value={selectedCurrency} onValueChange={setSelectedCurrency}>
-                        <SelectTrigger className="bg-white/[0.02] border-white/[0.05] text-white h-12 rounded-xl focus:border-[#00D9FF]/50 focus:ring-0">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-[#0a0a10] border-white/[0.05] rounded-xl">
-                          {currencies?.map((currency) => (
-                            <SelectItem key={currency.ticker} value={currency.ticker} className="text-white focus:bg-white/[0.04] rounded-lg">
-                              <span className="font-semibold">{currency.symbol}</span>
-                              <span className="text-white/30 ml-2 text-xs">{currency.name}</span>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Select value={selectedNetwork} onValueChange={setSelectedNetwork} disabled={availableNetworks.length <= 1}>
-                        <SelectTrigger className="bg-white/[0.02] border-white/[0.05] text-white h-12 rounded-xl focus:border-[#00D9FF]/50 focus:ring-0 disabled:opacity-40">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-[#0a0a10] border-white/[0.05] rounded-xl">
-                          {availableNetworks.map((network) => (
-                            <SelectItem key={network.id} value={network.id} className="text-white focus:bg-white/[0.04] rounded-lg">
-                              {network.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  {/* Swap indicator */}
-                  {isSwapMode && (
-                    <div className="flex justify-center">
-                      <div className="w-10 h-10 rounded-full bg-white/[0.02] border border-white/[0.05] flex items-center justify-center">
-                        <span className="text-[#00D9FF] text-lg">↓</span>
+                <div className="relative bg-[#0a0a0f] rounded-2xl border border-white/10 overflow-hidden">
+                  {/* Header */}
+                  <div className="px-8 py-6 border-b border-white/5 bg-gradient-to-r from-[#00D9FF]/5 to-transparent">
+                    <div className="flex items-center gap-3">
+                      <img src={APP_LOGO} alt="" className="w-8 h-8 rounded-lg" />
+                      <div>
+                        <h1 className="text-base font-bold text-white tracking-wider" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                          {isSwapMode ? "CROSS-CHAIN" : "STEALTH BRIDGE"}
+                        </h1>
+                        <p className="text-[10px] text-white/40 tracking-wider uppercase">
+                          {isSwapMode ? "Swap & Route" : "Same Asset Transfer"}
+                        </p>
                       </div>
                     </div>
-                  )}
+                  </div>
 
-                  {/* Destination Asset (Swap Mode) */}
-                  {isSwapMode && (
+                  <div className="p-8 space-y-6">
+                    
+                    {/* Mode Toggle */}
+                    <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5">
+                      <div>
+                        <span className="text-sm font-medium text-white">Cross-Chain</span>
+                        <p className="text-[10px] text-white/30 mt-0.5">Swap between assets</p>
+                      </div>
+                      <Switch
+                        checked={isSwapMode}
+                        onCheckedChange={setIsSwapMode}
+                        className="data-[state=checked]:bg-[#00D9FF]"
+                      />
+                    </div>
+
+                    {/* Source */}
                     <div className="space-y-3">
-                      <Label className="text-[11px] font-medium text-white/40 uppercase tracking-widest">To</Label>
+                      <Label className="text-[10px] font-medium text-white/40 uppercase tracking-[0.2em]">
+                        {isSwapMode ? "From" : "Asset"}
+                      </Label>
                       <div className="grid grid-cols-2 gap-3">
-                        <Select value={selectedToCurrency} onValueChange={setSelectedToCurrency}>
-                          <SelectTrigger className="bg-white/[0.02] border-white/[0.05] text-white h-12 rounded-xl focus:border-[#8B5CF6]/50 focus:ring-0">
+                        <Select value={selectedCurrency} onValueChange={setSelectedCurrency}>
+                          <SelectTrigger className="bg-white/[0.02] border-white/10 text-white h-12 rounded-xl focus:border-[#00D9FF]/50 focus:ring-0">
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent className="bg-[#0a0a10] border-white/[0.05] rounded-xl">
-                            {currencies?.filter(c => c.ticker !== selectedCurrency).map((currency) => (
-                              <SelectItem key={currency.ticker} value={currency.ticker} className="text-white focus:bg-white/[0.04] rounded-lg">
+                          <SelectContent className="bg-[#0a0a0f] border-white/10 rounded-xl">
+                            {currencies?.map((currency) => (
+                              <SelectItem key={currency.ticker} value={currency.ticker} className="text-white focus:bg-white/5 rounded-lg">
                                 <span className="font-semibold">{currency.symbol}</span>
                                 <span className="text-white/30 ml-2 text-xs">{currency.name}</span>
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
-                        <Select value={selectedToNetwork} onValueChange={setSelectedToNetwork} disabled={availableToNetworks.length <= 1}>
-                          <SelectTrigger className="bg-white/[0.02] border-white/[0.05] text-white h-12 rounded-xl focus:border-[#8B5CF6]/50 focus:ring-0 disabled:opacity-40">
+                        <Select value={selectedNetwork} onValueChange={setSelectedNetwork} disabled={availableNetworks.length <= 1}>
+                          <SelectTrigger className="bg-white/[0.02] border-white/10 text-white h-12 rounded-xl focus:border-[#00D9FF]/50 focus:ring-0 disabled:opacity-40">
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent className="bg-[#0a0a10] border-white/[0.05] rounded-xl">
-                            {availableToNetworks.map((network) => (
-                              <SelectItem key={network.id} value={network.id} className="text-white focus:bg-white/[0.04] rounded-lg">
+                          <SelectContent className="bg-[#0a0a0f] border-white/10 rounded-xl">
+                            {availableNetworks.map((network) => (
+                              <SelectItem key={network.id} value={network.id} className="text-white focus:bg-white/5 rounded-lg">
                                 {network.name}
                               </SelectItem>
                             ))}
@@ -628,163 +668,206 @@ export default function Home() {
                         </Select>
                       </div>
                     </div>
-                  )}
 
-                  {/* Recipient */}
-                  <div className="space-y-3">
-                    <Label className="text-[11px] font-medium text-white/40 uppercase tracking-widest">
-                      Receiving Wallet {isSwapMode && toCurrencyConfig && `(${toCurrencyConfig.symbol})`}
-                    </Label>
-                    <Input
-                      type="text"
-                      placeholder={isSwapMode ? (currentToNetwork?.addressPlaceholder || "Paste address") : (currentNetwork?.addressPlaceholder || "Paste address")}
-                      value={transferRecipient}
-                      onChange={(e) => setTransferRecipient(e.target.value)}
-                      className="bg-white/[0.02] border-white/[0.05] text-white h-12 rounded-xl font-mono text-sm focus:border-[#00D9FF]/50 focus:ring-0 placeholder:text-white/15"
-                    />
-                  </div>
+                    {/* Swap indicator */}
+                    {isSwapMode && (
+                      <div className="flex justify-center">
+                        <div className="w-10 h-10 rounded-full bg-white/[0.02] border border-white/10 flex items-center justify-center text-[#00D9FF]">
+                          ↓
+                        </div>
+                      </div>
+                    )}
 
-                  {/* Amount */}
-                  <div className="space-y-3">
-                    <Label className="text-[11px] font-medium text-white/40 uppercase tracking-widest">Amount</Label>
-                    <div className="relative">
+                    {/* Destination Asset (Swap Mode) */}
+                    {isSwapMode && (
+                      <div className="space-y-3">
+                        <Label className="text-[10px] font-medium text-white/40 uppercase tracking-[0.2em]">To</Label>
+                        <div className="grid grid-cols-2 gap-3">
+                          <Select value={selectedToCurrency} onValueChange={setSelectedToCurrency}>
+                            <SelectTrigger className="bg-white/[0.02] border-white/10 text-white h-12 rounded-xl focus:border-[#8B5CF6]/50 focus:ring-0">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-[#0a0a0f] border-white/10 rounded-xl">
+                              {currencies?.filter(c => c.ticker !== selectedCurrency).map((currency) => (
+                                <SelectItem key={currency.ticker} value={currency.ticker} className="text-white focus:bg-white/5 rounded-lg">
+                                  <span className="font-semibold">{currency.symbol}</span>
+                                  <span className="text-white/30 ml-2 text-xs">{currency.name}</span>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Select value={selectedToNetwork} onValueChange={setSelectedToNetwork} disabled={availableToNetworks.length <= 1}>
+                            <SelectTrigger className="bg-white/[0.02] border-white/10 text-white h-12 rounded-xl focus:border-[#8B5CF6]/50 focus:ring-0 disabled:opacity-40">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-[#0a0a0f] border-white/10 rounded-xl">
+                              {availableToNetworks.map((network) => (
+                                <SelectItem key={network.id} value={network.id} className="text-white focus:bg-white/5 rounded-lg">
+                                  {network.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Recipient */}
+                    <div className="space-y-3">
+                      <Label className="text-[10px] font-medium text-white/40 uppercase tracking-[0.2em]">
+                        Destination {isSwapMode && toCurrencyConfig && `(${toCurrencyConfig.symbol})`}
+                      </Label>
                       <Input
-                        type="number"
-                        step="0.000001"
-                        placeholder="0.00"
-                        value={transferAmount}
-                        onChange={(e) => setTransferAmount(e.target.value)}
-                        className="bg-white/[0.02] border-white/[0.05] text-white h-14 rounded-xl text-xl pr-20 focus:border-[#00D9FF]/50 focus:ring-0 placeholder:text-white/15"
+                        type="text"
+                        placeholder={isSwapMode ? (currentToNetwork?.addressPlaceholder || "Wallet address") : (currentNetwork?.addressPlaceholder || "Wallet address")}
+                        value={transferRecipient}
+                        onChange={(e) => setTransferRecipient(e.target.value)}
+                        className="bg-white/[0.02] border-white/10 text-white h-12 rounded-xl font-mono text-sm focus:border-[#00D9FF]/50 focus:ring-0 placeholder:text-white/20"
                       />
-                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-white/30 font-semibold">
-                        {currentCurrency?.symbol || "SOL"}
-                      </span>
                     </div>
-                  </div>
 
-                  {/* Estimate */}
-                  {transferAmount && parseFloat(transferAmount) > 0 && (
-                    <div className="rounded-2xl bg-white/[0.01] border border-white/[0.04] p-5 space-y-4">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-white/30">Bridge Fee</span>
-                        {isEstimatingFees ? (
-                          <span className="w-20 h-4 bg-white/[0.04] rounded animate-pulse"></span>
-                        ) : feeEstimate?.feeAmount !== undefined ? (
-                          <span className="text-white/60">{Number(feeEstimate.feeAmount).toFixed(6)} {currentCurrency?.symbol}</span>
-                        ) : (
-                          <span className="text-white/20">—</span>
-                        )}
+                    {/* Amount */}
+                    <div className="space-y-3">
+                      <Label className="text-[10px] font-medium text-white/40 uppercase tracking-[0.2em]">Amount</Label>
+                      <div className="relative">
+                        <Input
+                          type="number"
+                          step="0.000001"
+                          placeholder="0.00"
+                          value={transferAmount}
+                          onChange={(e) => setTransferAmount(e.target.value)}
+                          className="bg-white/[0.02] border-white/10 text-white h-14 rounded-xl text-xl pr-20 focus:border-[#00D9FF]/50 focus:ring-0 placeholder:text-white/20"
+                        />
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-white/40 font-semibold">
+                          {currentCurrency?.symbol || "SOL"}
+                        </span>
                       </div>
-                      <div className="h-px bg-white/[0.04]"></div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-white/30 text-sm">Recipient Gets</span>
-                        {isEstimatingFees ? (
-                          <span className="w-28 h-7 bg-white/[0.04] rounded animate-pulse"></span>
-                        ) : feeEstimate?.receiveAmount !== undefined ? (
-                          <span className="text-2xl font-bold text-[#00D9FF]">
-                            {Number(feeEstimate.receiveAmount).toFixed(6)}
-                            <span className="text-sm ml-1 text-white/40">{isSwapMode ? toCurrencyConfig?.symbol : currentCurrency?.symbol}</span>
-                          </span>
-                        ) : (
-                          <span className="text-white/20">—</span>
-                        )}
-                      </div>
-                      {feeEstimate && (feeEstimate as any).transactionSpeedForecast && (
-                        <>
-                          <div className="h-px bg-white/[0.04]"></div>
-                          <div className="flex justify-between text-sm">
-                            <span className="text-white/30">Est. Time</span>
-                            <span className="text-emerald-400 font-medium">~{(feeEstimate as any).transactionSpeedForecast} min</span>
-                          </div>
-                        </>
-                      )}
                     </div>
-                  )}
 
-                  {/* Submit */}
-                  <TokenGate>
-                    <Button
-                      onClick={handleTransfer}
-                      disabled={!transferRecipient || !transferAmount || transferMutation.isPending || (feeEstimate && !feeEstimate.isValid)}
-                      className="w-full h-14 rounded-2xl text-sm font-bold tracking-wider bg-gradient-to-r from-[#00D9FF] to-[#00b3d9] hover:from-[#00e5ff] hover:to-[#00c4e5] text-[#020204] disabled:opacity-20 disabled:cursor-not-allowed transition-all shadow-[0_0_30px_rgba(0,217,255,0.2)] hover:shadow-[0_0_40px_rgba(0,217,255,0.4)]"
-                      style={{ fontFamily: "'Orbitron', sans-serif" }}
-                    >
-                      {transferMutation.isPending ? "GENERATING···" : "GENERATE DEPOSIT"}
-                    </Button>
-                  </TokenGate>
-
-                  {/* Result */}
-                  {transactionResult && transactionResult.payinAddress && (
-                    <div className="rounded-2xl bg-[#00D9FF]/[0.03] border border-[#00D9FF]/20 p-6 space-y-5">
-                      
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-[#00D9FF]/20 flex items-center justify-center">
-                          <span className="text-[#00D9FF] text-lg">✓</span>
+                    {/* Estimate */}
+                    {transferAmount && parseFloat(transferAmount) > 0 && (
+                      <div className="rounded-xl bg-white/[0.02] border border-white/5 p-5 space-y-4">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-white/30">Fee</span>
+                          {isEstimatingFees ? (
+                            <span className="w-20 h-4 bg-white/5 rounded animate-pulse"></span>
+                          ) : feeEstimate?.feeAmount !== undefined ? (
+                            <span className="text-white/60">{Number(feeEstimate.feeAmount).toFixed(6)} {currentCurrency?.symbol}</span>
+                          ) : (
+                            <span className="text-white/20">—</span>
+                          )}
                         </div>
-                        <div>
-                          <p className="font-semibold text-white" style={{ fontFamily: "'Orbitron', sans-serif" }}>Bridge Ready</p>
-                          <p className="text-[11px] text-white/40">Deposit to complete transfer</p>
-                        </div>
-                      </div>
-
-                      {/* Status */}
-                      {transactionStatus && typeof transactionStatus === 'object' && 'status' in transactionStatus && (
-                        <div className="bg-black/30 rounded-xl p-4 space-y-3">
-                          <div className="flex justify-between items-center">
-                            <span className="text-[10px] text-white/30 uppercase tracking-widest">Status</span>
-                            <span className={`text-xs font-bold tracking-wider ${getStatusDisplay(String(transactionStatus.status)).color}`}>
-                              {getStatusDisplay(String(transactionStatus.status)).label}
+                        <div className="h-px bg-white/5"></div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-white/30 text-sm">Recipient Gets</span>
+                          {isEstimatingFees ? (
+                            <span className="w-28 h-7 bg-white/5 rounded animate-pulse"></span>
+                          ) : feeEstimate?.receiveAmount !== undefined ? (
+                            <span className="text-2xl font-bold text-[#00D9FF]" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                              {Number(feeEstimate.receiveAmount).toFixed(6)}
+                              <span className="text-sm ml-1 text-white/40 font-normal">{isSwapMode ? toCurrencyConfig?.symbol : currentCurrency?.symbol}</span>
                             </span>
-                          </div>
-                          <Progress value={getStatusDisplay(String(transactionStatus.status)).progress} className="h-1" />
+                          ) : (
+                            <span className="text-white/20">—</span>
+                          )}
                         </div>
-                      )}
-
-                      {/* Deposit Info */}
-                      <div className="space-y-4">
-                        <p className="text-sm text-white/50">
-                          Send exactly <span className="text-white font-bold">{transactionResult.amount?.toFixed(6)} {transactionResult.currency}</span>
-                        </p>
-                        
-                        <div className="flex justify-center p-4 bg-white rounded-2xl">
-                          <QRCodeSVG value={transactionResult.payinAddress} size={160} level="H" />
-                        </div>
-
-                        <div className="flex gap-2">
-                          <code className="flex-1 text-[11px] font-mono bg-black/30 text-[#00D9FF] p-3 rounded-xl break-all">
-                            {transactionResult.payinAddress}
-                          </code>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              navigator.clipboard.writeText(transactionResult.payinAddress || "");
-                              toast.success("Copied");
-                            }}
-                            className="shrink-0 border-white/10 hover:bg-white/5 rounded-xl"
-                          >
-                            Copy
-                          </Button>
-                        </div>
-
-                        <p className="text-[11px] text-amber-400/80 bg-amber-400/10 rounded-xl p-3">
-                          ⚠ Send exact amount. {transactionResult.isSwap && `Recipient gets ${transactionResult.toCurrency}.`}
-                        </p>
+                        {feeEstimate && (feeEstimate as any).transactionSpeedForecast && (
+                          <>
+                            <div className="h-px bg-white/5"></div>
+                            <div className="flex justify-between text-sm">
+                              <span className="text-white/30">Est. Time</span>
+                              <span className="text-emerald-400 font-medium">~{(feeEstimate as any).transactionSpeedForecast} min</span>
+                            </div>
+                          </>
+                        )}
                       </div>
+                    )}
 
+                    {/* Submit */}
+                    <TokenGate>
                       <Button
-                        variant="ghost"
-                        className="w-full text-white/30 hover:text-white hover:bg-white/5 rounded-xl"
-                        onClick={() => {
-                          setTransactionResult(null);
-                          setTransferRecipient("");
-                          setTransferAmount("");
-                        }}
+                        onClick={handleTransfer}
+                        disabled={!transferRecipient || !transferAmount || transferMutation.isPending || (feeEstimate && !feeEstimate.isValid)}
+                        className="w-full h-14 rounded-xl text-sm font-bold tracking-[0.15em] bg-[#00D9FF] hover:bg-[#00e5ff] text-black disabled:opacity-20 disabled:cursor-not-allowed transition-all hover:shadow-[0_0_30px_rgba(0,217,255,0.4)]"
+                        style={{ fontFamily: "'Orbitron', sans-serif" }}
                       >
-                        New Transfer
+                        {transferMutation.isPending ? "GENERATING···" : "GENERATE DEPOSIT"}
                       </Button>
-                    </div>
-                  )}
+                    </TokenGate>
+
+                    {/* Result */}
+                    {transactionResult && transactionResult.payinAddress && (
+                      <div className="rounded-xl bg-[#00D9FF]/5 border border-[#00D9FF]/20 p-6 space-y-5">
+                        
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-[#00D9FF]/20 flex items-center justify-center text-[#00D9FF]">
+                            ✓
+                          </div>
+                          <div>
+                            <p className="font-semibold text-white" style={{ fontFamily: "'Orbitron', sans-serif" }}>Route Generated</p>
+                            <p className="text-[10px] text-white/40">Awaiting deposit</p>
+                          </div>
+                        </div>
+
+                        {/* Status */}
+                        {transactionStatus && typeof transactionStatus === 'object' && 'status' in transactionStatus && (
+                          <div className="bg-black/30 rounded-xl p-4 space-y-3">
+                            <div className="flex justify-between items-center">
+                              <span className="text-[10px] text-white/30 uppercase tracking-widest">Status</span>
+                              <span className={`text-xs font-bold tracking-wider ${getStatusDisplay(String(transactionStatus.status)).color}`}>
+                                {getStatusDisplay(String(transactionStatus.status)).label}
+                              </span>
+                            </div>
+                            <Progress value={getStatusDisplay(String(transactionStatus.status)).progress} className="h-1" />
+                          </div>
+                        )}
+
+                        {/* Deposit Info */}
+                        <div className="space-y-4">
+                          <p className="text-sm text-white/50">
+                            Send exactly <span className="text-white font-bold">{transactionResult.amount?.toFixed(6)} {transactionResult.currency}</span>
+                          </p>
+                          
+                          <div className="flex justify-center p-4 bg-white rounded-xl">
+                            <QRCodeSVG value={transactionResult.payinAddress} size={160} level="H" />
+                          </div>
+
+                          <div className="flex gap-2">
+                            <code className="flex-1 text-[10px] font-mono bg-black/30 text-[#00D9FF] p-3 rounded-xl break-all">
+                              {transactionResult.payinAddress}
+                            </code>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                navigator.clipboard.writeText(transactionResult.payinAddress || "");
+                                toast.success("Copied");
+                              }}
+                              className="shrink-0 border-white/10 hover:bg-white/5 rounded-xl"
+                            >
+                              Copy
+                            </Button>
+                          </div>
+
+                          <p className="text-[10px] text-amber-400/80 bg-amber-400/10 rounded-xl p-3">
+                            ⚠ Send exact amount. {transactionResult.isSwap && `Recipient gets ${transactionResult.toCurrency}.`}
+                          </p>
+                        </div>
+
+                        <Button
+                          variant="ghost"
+                          className="w-full text-white/30 hover:text-white hover:bg-white/5 rounded-xl"
+                          onClick={() => {
+                            setTransactionResult(null);
+                            setTransferRecipient("");
+                            setTransferAmount("");
+                          }}
+                        >
+                          New Transfer
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
