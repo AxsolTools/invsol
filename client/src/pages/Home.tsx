@@ -367,15 +367,6 @@ export default function Home() {
             <section className="min-h-[90vh] flex flex-col justify-center py-20">
               <div className="text-center max-w-4xl mx-auto space-y-12">
                 
-                {/* Status Indicator */}
-                <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full border border-[#00D9FF]/30 bg-[#00D9FF]/10">
-                  <div className="relative">
-                    <div className="absolute inset-0 bg-[#00D9FF] rounded-full animate-ping opacity-75"></div>
-                    <div className="relative w-2.5 h-2.5 bg-[#00D9FF] rounded-full"></div>
-                  </div>
-                  <span className="text-xs font-medium text-[#00D9FF] tracking-[0.2em] uppercase">Network Active</span>
-                </div>
-
                 {/* Logo & Title */}
                 <div className="space-y-6">
                   <div className="flex justify-center">
