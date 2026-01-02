@@ -383,25 +383,72 @@
     }
   }
 
-  /* Data Flow Particles - Fintech style */
-  .data-flow-container {
-    overflow: hidden;
+  /* Visible Network Nodes */
+  .network-node-visible {
+    position: absolute;
+    transform: translate(-50%, -50%);
   }
 
-  .data-particle {
-    position: absolute;
-    width: 3px;
-    height: 3px;
+  .node-core {
+    width: 8px;
+    height: 8px;
     background: #00D9FF;
     border-radius: 50%;
-    box-shadow: 0 0 8px #00D9FF, 0 0 16px #00D9FF;
-    animation: data-flow linear infinite;
-    opacity: 0;
+    box-shadow: 0 0 12px #00D9FF, 0 0 24px #00D9FF;
+    position: relative;
+    z-index: 2;
   }
 
-  @keyframes data-flow {
+  .node-pulse-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 8px;
+    border: 2px solid #00D9FF;
+    border-radius: 50%;
+    animation: node-pulse 2s ease-out infinite;
+  }
+
+  @keyframes node-pulse {
     0% {
-      transform: translateY(100vh) translateX(0);
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1;
+    }
+    100% {
+      transform: translate(-50%, -50%) scale(4);
+      opacity: 0;
+    }
+  }
+
+  /* Flow Line Animation */
+  .flow-line {
+    animation: flow-move 8s linear infinite;
+  }
+
+  @keyframes flow-move {
+    0% {
+      stroke-dashoffset: 0;
+      opacity: 0.3;
+    }
+    50% {
+      opacity: 0.8;
+    }
+    100% {
+      stroke-dashoffset: -1000;
+      opacity: 0.3;
+    }
+  }
+
+  /* Flow Dot Animation */
+  .flow-dot {
+    animation: flow-dot-move 3s linear infinite;
+  }
+
+  @keyframes flow-dot-move {
+    0% {
+      transform: translateX(0);
       opacity: 0;
     }
     10% {
@@ -411,133 +458,23 @@
       opacity: 1;
     }
     100% {
-      transform: translateY(-100px) translateX(50px);
+      transform: translateX(100vw);
       opacity: 0;
     }
   }
 
-  /* Network Nodes - Pulse effect */
-  .network-nodes {
-    overflow: hidden;
-  }
-
-  .network-node {
-    position: absolute;
-    width: 6px;
-    height: 6px;
-    background: #00D9FF;
-    border-radius: 50%;
-    box-shadow: 0 0 12px #00D9FF;
-  }
-
-  .network-node-pulse {
-    position: absolute;
-    inset: -8px;
-    border: 1px solid #00D9FF;
-    border-radius: 50%;
-    animation: network-pulse 2s ease-out infinite;
-    opacity: 0;
-  }
-
-  @keyframes network-pulse {
-    0% {
-      transform: scale(0.8);
-      opacity: 1;
+  /* Gradient Text Animation */
+  @keyframes gradient-shift {
+    0%, 100% {
+      background-position: 0% 50%;
     }
-    100% {
-      transform: scale(2.5);
-      opacity: 0;
+    50% {
+      background-position: 100% 50%;
     }
   }
 
-  /* Circuit Path Animation */
-  .circuit-paths {
-    pointer-events: none;
-  }
-
-  .circuit-path {
-    filter: drop-shadow(0 0 2px rgba(0, 217, 255, 0.5));
-  }
-
-  @keyframes circuit-flow {
-    0% {
-      stroke-dashoffset: 200;
-      opacity: 0;
-    }
-    10% {
-      opacity: 1;
-    }
-    90% {
-      opacity: 1;
-    }
-    100% {
-      stroke-dashoffset: -200;
-      opacity: 0;
-    }
-  }
-
-  /* Data Stream Effect */
-  .data-stream {
-    position: relative;
-    overflow: hidden;
-  }
-
-  .data-stream::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(0, 217, 255, 0.1),
-      transparent
-    );
-    animation: data-stream-flow 3s ease-in-out infinite;
-  }
-
-  @keyframes data-stream-flow {
-    0% {
-      left: -100%;
-    }
-    100% {
-      left: 100%;
-    }
-  }
-
-  /* Network Activity Indicator */
-  .network-activity {
-    position: relative;
-  }
-
-  .network-activity::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: 
-      repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 2px,
-        rgba(0, 217, 255, 0.03) 2px,
-        rgba(0, 217, 255, 0.03) 4px
-      );
-    animation: network-scan 4s linear infinite;
-    pointer-events: none;
-  }
-
-  @keyframes network-scan {
-    0% {
-      transform: translateY(-100%);
-    }
-    100% {
-      transform: translateY(100%);
-    }
+  .animate-gradient-shift {
+    animation: gradient-shift 3s ease infinite;
   }
 
   /* Floating particles animation */
