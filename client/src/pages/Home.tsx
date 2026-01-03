@@ -437,22 +437,44 @@ export default function Home() {
                   <div className="text-xs text-white/30 tracking-widest uppercase mb-4">Supported Assets</div>
                   <div className="flex flex-wrap items-center justify-center gap-4">
                     {[
-                      { symbol: 'BTC', color: '#F7931A' },
-                      { symbol: 'ETH', color: '#627EEA' },
-                      { symbol: 'SOL', color: '#00D9FF' },
-                      { symbol: 'BNB', color: '#F3BA2F' },
-                      { symbol: 'XRP', color: '#FFFFFF' },
-                      { symbol: 'USDT', color: '#26A17B' },
-                      { symbol: 'USDC', color: '#2775CA' },
+                      { symbol: 'BTC', logo: 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png' },
+                      { symbol: 'ETH', logo: 'https://assets.coingecko.com/coins/images/279/small/ethereum.png' },
+                      { symbol: 'SOL', logo: 'https://assets.coingecko.com/coins/images/4128/small/solana.png' },
+                      { symbol: 'BNB', logo: 'https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png' },
+                      { symbol: 'XRP', logo: 'https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png' },
+                      { symbol: 'USDT', logo: 'https://assets.coingecko.com/coins/images/325/small/Tether.png' },
+                      { symbol: 'USDC', logo: 'https://assets.coingecko.com/coins/images/6319/small/USD_Coin_icon.png' },
                     ].map((asset) => (
                       <div 
                         key={asset.symbol} 
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/[0.03] border border-white/10 hover:border-[#00D9FF]/30 transition-all"
+                        className="flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-white/[0.03] border border-white/10 hover:border-[#00D9FF]/30 transition-all"
                       >
-                        <div 
-                          className="w-2 h-2 rounded-full" 
-                          style={{ backgroundColor: asset.color, boxShadow: `0 0 8px ${asset.color}80` }}
-                        ></div>
+                        <img 
+                          src={asset.logo} 
+                          alt={asset.symbol}
+                          className="w-5 h-5 rounded-full"
+                          onError={(e) => {
+                            // Fallback to colored dot if image fails to load
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            const parent = target.parentElement;
+                            if (parent) {
+                              const fallback = document.createElement('div');
+                              fallback.className = 'w-2 h-2 rounded-full';
+                              const colors: Record<string, string> = {
+                                'BTC': '#F7931A',
+                                'ETH': '#627EEA',
+                                'SOL': '#00D9FF',
+                                'BNB': '#F3BA2F',
+                                'XRP': '#FFFFFF',
+                                'USDT': '#26A17B',
+                                'USDC': '#2775CA'
+                              };
+                              fallback.style.backgroundColor = colors[asset.symbol] || '#999';
+                              parent.insertBefore(fallback, target);
+                            }
+                          }}
+                        />
                         <span className="text-sm font-medium text-white/70">{asset.symbol}</span>
                       </div>
                     ))}
